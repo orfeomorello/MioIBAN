@@ -1,0 +1,18 @@
+{
+  "ibantools": {
+    "version": "4.5.4",
+    "license": "MIT OR MPL-2.0 (si sceglie MIT)",
+    "files": {
+      "ibantools.js": {
+        "url": "https://cdn.jsdelivr.net/npm/ibantools@4.5.4/jsnext/ibantools.js",
+        "sha256": "2f4bc64c1cdb90e82a56d0f69eb7112c5f33fe5ebae62b6257824494ab213fc2",
+        "bytes": 47384
+      },
+      "LICENSE-ibantools-MIT.txt": {
+        "url": "https://cdn.jsdelivr.net/npm/ibantools@4.5.4/LICENSE.MIT",
+        "sha256": "2742df4a1aa0c67d1281f09dc2dffae8b429e69878cf22e1f377be94e04fb756",
+        "bytes": 1066
+      }
+    }
+  }
+}

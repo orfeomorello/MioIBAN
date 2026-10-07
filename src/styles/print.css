@@ -1,0 +1,178 @@
+/* ==========================================================================
+   MioIBAN — Foglio di stile per la stampa
+   --------------------------------------------------------------------------
+   MioIBAN-SPEC.md §9.2:
+   - SOLO bianco e nero: le stampanti domestiche non rendono i colori in modo
+     affidabile, e molte stampano in scala di grigi.
+   - L'IBAN deve essere la cosa piu' grande della pagina.
+   - Nascondere navigazione, pulsanti, barre azioni, toast e sheet.
+   - Il pie' di pagina con la data e' OBBLIGATORIO.
+   - "Stampa tutti" deve interrompere la pagina tra un conto e l'altro.
+   ========================================================================== */
+
+@media print {
+  /* Forza la palette a bianco/nero: ignora tema chiaro/scuro e "inverti colori". */
+  :root,
+  [data-theme="light"],
+  [data-theme="dark"],
+  [data-theme="auto"] {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --border: #000000;
+    --text: #000000;
+    --text-muted: #333333;
+    --accent: #000000;
+    --accent-text: #ffffff;
+    --accent-soft: #ffffff;
+    --ok: #000000;
+    --ok-soft: #ffffff;
+    --warn: #000000;
+    --warn-soft: #ffffff;
+    --error: #000000;
+    --error-soft: #ffffff;
+    /* Gli zeri non possono affidarsi al colore: restano barrati dal font. */
+    --zero: #000000;
+    --zero-soft: #ffffff;
+  }
+
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  body {
+    font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  /* Si nasconde TUTTA l'interfaccia e si mostra solo l'area di stampa.
+     `#print-host` e' `display: none` a schermo (main.css); qui si inverte. */
+  .app,
+  .app-header,
+  .action-bar,
+  .chips,
+  .toast,
+  .sheet,
+  .btn,
+  .no-print,
+  nav,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  #print-host {
+    display: block !important;
+  }
+
+  .app-main {
+    padding: 0 !important;
+  }
+
+  /* --- Foglio di stampa --- */
+
+  .print-sheet {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    break-after: page;
+    page-break-after: always;
+    padding-block-end: 6mm;
+  }
+
+  /* L'ultimo foglio non deve generare una pagina bianca in fondo. */
+  .print-sheet:last-of-type {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .print-sheet__heading {
+    margin-block-end: 6mm;
+    padding-block-end: 2mm;
+    border-block-end: 2px solid #000000;
+    font-family: system-ui, "Segoe UI", Arial, sans-serif;
+    font-size: 14pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .print-sheet__row {
+    display: flex;
+    gap: 4mm;
+    margin-block-end: 3mm;
+    font-family: system-ui, "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+  }
+
+  .print-sheet__label {
+    flex: none;
+    inline-size: 38mm;
+    font-weight: 600;
+  }
+
+  .print-sheet__value {
+    flex: 1;
+    border-block-end: 1px dotted #666666;
+  }
+
+  /* --- L'IBAN: l'elemento piu' grande della pagina --- */
+
+  .print-sheet__iban-label {
+    margin-block: 6mm 2mm;
+    font-family: system-ui, "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .print-sheet__iban {
+    font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace;
+    /* Misura di base: buildPrintSheet() la sostituisce con quella calcolata
+       sulla lunghezza reale, cosi' l'IBAN sta su una sola riga (vedi
+       ibanPrintSize in src/ui/print.js). Resta comunque l'elemento piu'
+       grande del foglio: e' il dato da ricopiare a mano. */
+    font-size: 17pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.35;
+    word-spacing: 0.3em;
+    /* Zero barrato dove il font lo supporta: aiuta anche sul foglio. */
+    font-variant-numeric: slashed-zero;
+    font-feature-settings: "zero" 1;
+    border: 1px solid #000000;
+    padding: 4mm;
+    text-align: center;
+  }
+
+  .print-sheet__reason {
+    margin-block-start: 8mm;
+    font-family: system-ui, "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+  }
+
+  .print-sheet__reason-line {
+    display: block;
+    block-size: 10mm;
+    border-block-end: 1px solid #000000;
+  }
+
+  /* Il pie' di pagina con la data e' obbligatorio (§9.2). */
+  .print-sheet__footer {
+    margin-block-start: 10mm;
+    padding-block-start: 2mm;
+    border-block-start: 1px solid #000000;
+    font-family: system-ui, "Segoe UI", Arial, sans-serif;
+    font-size: 8pt;
+    line-height: 1.4;
+    text-align: center;
+  }
+}

@@ -1,0 +1,1030 @@
+/* ==========================================================================
+   MioIBAN — Foglio di stile principale
+   --------------------------------------------------------------------------
+   Requisiti che guidano questo file (MioIBAN-SPEC.md):
+   - §10 Accessibilita': touch target >= 48px, font >= 16px, contrasto WCAG AA,
+     focus visibile, zoom mai disabilitato.
+   - §8 IBANAnalyzer: monospace, blocchi da 4, zeri evidenziati, conteggio,
+     modalita' "inverti colori" ad alto contrasto.
+   - Multilingua: si usano PROPRIETA' LOGICHE (inline-start / inline-end /
+     margin-inline / padding-inline / border-inline) al posto di left/right,
+     cosi' il layout e' gia' pronto per una lingua RTL senza riscritture.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Reset minimo
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Mai disabilitare lo zoom: §10 */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body,
+h1, h2, h3, h4, p, figure, blockquote, dl, dd, ul, ol {
+  margin: 0;
+}
+
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+  padding: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+img,
+svg {
+  display: block;
+  max-inline-size: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   2. Token di design
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* Tipografia: la scala si sposta con data-size su <html>. Vedi §10. */
+  --fs-scale: 1;
+  --fs-base: calc(1rem * var(--fs-scale)); /* >= 16px */
+  --fs-sm: calc(0.875rem * var(--fs-scale));
+  --fs-lg: calc(1.125rem * var(--fs-scale));
+  --fs-xl: calc(1.375rem * var(--fs-scale));
+  --fs-2xl: calc(1.75rem * var(--fs-scale));
+
+  /* Font monospace per gli IBAN. 'zero' attiva lo zero barrato dove il font
+     lo supporta: aiuta a distinguere 0 da O (§8.1). */
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono",
+    "DejaVu Sans Mono", Consolas, monospace;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Scala dell'IBAN: cresce con la grandezza testo scelta. §8.1 chiede >=28px. */
+  --iban-block-size: calc(1.75rem * var(--fs-scale));
+  --iban-count-size: calc(0.8125rem * var(--fs-scale));
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* Minimo indispensabile: §10 */
+  --touch-target: 48px;
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+}
+
+/* Tema chiaro (default) */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-2: #eef0f4;
+  --border: #d3d7de;
+  --text: #14181f;
+  --text-muted: #5a626e;
+
+  --accent: #1d4ed8;
+  --accent-text: #ffffff;
+  --accent-soft: #e3ebfd;
+
+  /* Semantica degli esiti di validazione (src/core/errors.js) */
+  --ok: #146c2e;
+  --ok-soft: #e2f4e6;
+  --warn: #8a5300;
+  --warn-soft: #fdf0d5;
+  --error: #b3261e;
+  --error-soft: #fce8e6;
+
+  /* Evidenziazione degli zeri: deve saltare all'occhio senza confondere (§8.1) */
+  --zero: #a35a00;
+  --zero-soft: #ffe8bf;
+
+  --focus-ring: #1d4ed8;
+}
+
+/* Tema scuro */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #10131a;
+  --surface: #191d26;
+  --surface-2: #222734;
+  --border: #343b4a;
+  --text: #f2f4f8;
+  --text-muted: #a9b1c1;
+
+  --accent: #8ab4ff;
+  --accent-text: #0b1220;
+  --accent-soft: #1e2b45;
+
+  --ok: #7fd39a;
+  --ok-soft: #14301f;
+  --warn: #f0c070;
+  --warn-soft: #33260d;
+  --error: #ff9d94;
+  --error-soft: #3a1a18;
+
+  --zero: #ffc65c;
+  --zero-soft: #3d2c0b;
+
+  --focus-ring: #8ab4ff;
+}
+
+/* Tema automatico: segue il sistema se l'utente non ha scelto. */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    color-scheme: dark;
+    --bg: #10131a;
+    --surface: #191d26;
+    --surface-2: #222734;
+    --border: #343b4a;
+    --text: #f2f4f8;
+    --text-muted: #a9b1c1;
+    --accent: #8ab4ff;
+    --accent-text: #0b1220;
+    --accent-soft: #1e2b45;
+    --ok: #7fd39a;
+    --ok-soft: #14301f;
+    --warn: #f0c070;
+    --warn-soft: #33260d;
+    --error: #ff9d94;
+    --error-soft: #3a1a18;
+    --zero: #ffc65c;
+    --zero-soft: #3d2c0b;
+    --focus-ring: #8ab4ff;
+  }
+}
+
+/* Grandezza del testo: 3 livelli, con un tetto per non rompere il layout. */
+[data-size="large"] {
+  --fs-scale: 1.2;
+}
+[data-size="xlarge"] {
+  --fs-scale: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   3. Base
+   -------------------------------------------------------------------------- */
+
+body {
+  min-block-size: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  /* La Modalita' Sportello richiede stabilita' di layout su telefoni con
+     barra degli indirizzi dinamica. */
+  overflow-wrap: break-word;
+}
+
+/* Focus sempre visibile: §10 */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Rispetta chi chiede meno animazioni. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* L'attributo hidden deve vincere sui display dei componenti (es. .status):
+   senza questa regola le barre di stato vuote resterebbero visibili
+   anche quando non hanno nulla da dire. */
+[hidden] {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. Struttura dell'app
+   -------------------------------------------------------------------------- */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+}
+
+.app-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border-block-end: 1px solid var(--border);
+}
+
+.app-header__title {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-lg);
+  font-weight: 650;
+}
+
+/* Azioni della vista corrente in alto a destra (es. modifica ed elimina nel
+   dettaglio): il pattern standard delle app mobili. */
+.app-header__actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-1);
+  margin-inline-start: auto;
+}
+
+/* Nell'header il pulsante distruttivo resta ghost: solo l'icona e' rossa. */
+.app-header__actions .btn--danger {
+  background: transparent;
+  border-color: transparent;
+}
+
+.app-main {
+  flex: 1;
+  padding: var(--space-4);
+  padding-block-end: calc(var(--touch-target) + var(--space-6));
+}
+
+/* Barra azioni fissa in basso: raggiungibile col pollice (§8.1). */
+.action-bar {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline: 0;
+  z-index: 20;
+  padding: var(--space-2) var(--space-3);
+  padding-block-end: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-block-start: 1px solid var(--border);
+}
+
+/* Il contenuto della barra viene montato qui da src/app.js. */
+.action-bar__inner {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.action-bar__inner > * {
+  flex: 1;
+}
+
+/* Nel dettaglio le azioni sono quattro: su schermi stretti vanno a capo
+   invece di diventare pulsanti minuscoli e intoccabili. */
+.action-bar__inner--wrap {
+  flex-wrap: wrap;
+}
+
+.action-bar__inner--wrap > * {
+  flex: 1 1 40%;
+}
+
+/* --------------------------------------------------------------------------
+   5. Componenti
+   -------------------------------------------------------------------------- */
+
+/* --- Pulsanti ---
+   Tutti rispettano il touch target minimo di 48px. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-block-size: var(--touch-target);
+  min-inline-size: var(--touch-target);
+  padding-inline: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast) ease, transform var(--duration-fast) ease;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-text);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.btn--danger {
+  background: var(--error-soft);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.btn--big {
+  min-block-size: 64px;
+  font-size: var(--fs-lg);
+}
+
+.btn--icon {
+  padding-inline: 0;
+}
+
+/* --- Campi --- */
+.field {
+  display: block;
+  margin-block-end: var(--space-4);
+}
+
+.field__label {
+  display: block;
+  margin-block-end: var(--space-1);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.field__input,
+.field__textarea,
+.field__select {
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.field__input--mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-lg);
+  letter-spacing: 0.06em;
+  font-variant-numeric: slashed-zero;
+  font-feature-settings: "zero" 1;
+}
+
+/* --- Messaggi di stato ---
+   Il colore non e' mai l'unico segnale: c'e' sempre un'icona e un testo (§10). */
+.status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: var(--fs-sm);
+}
+
+.status__icon {
+  flex: none;
+  font-size: var(--fs-base);
+  line-height: 1.3;
+}
+
+.status--ok {
+  background: var(--ok-soft);
+  border-color: var(--ok);
+  color: var(--ok);
+}
+.status--warn {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.status--error {
+  background: var(--error-soft);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* --- Schede conto --- */
+.account-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.account-card {
+  display: block;
+  inline-size: 100%;
+  text-align: start;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.account-card__alias {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.account-card__bank {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.account-card__iban {
+  margin-block-start: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-lg);
+  letter-spacing: 0.06em;
+  font-variant-numeric: slashed-zero;
+  font-feature-settings: "zero" 1;
+}
+
+/* Vista a righe: piu' densa, per chi ha molti conti. */
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-block-end: 1px solid var(--border);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* --- Chip dei filtri --- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-3);
+}
+
+.chip {
+  min-block-size: 40px;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 650;
+}
+
+/* --- Toast --- */
+.toast {
+  position: fixed;
+  inset-block-end: calc(var(--touch-target) + var(--space-5));
+  inset-inline: var(--space-4);
+  z-index: 40;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.28);
+}
+
+/* --- Bottom sheet --- */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  background: rgb(0 0 0 / 0.45);
+}
+
+.sheet__panel {
+  inline-size: 100%;
+  max-block-size: 92dvh;
+  overflow-y: auto;
+  padding: var(--space-4);
+  padding-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  border-start-start-radius: var(--radius-lg);
+  border-start-end-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.sheet__title {
+  margin-block-end: var(--space-4);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   6. IBANAnalyzer — il cuore dell'app (§8)
+   -------------------------------------------------------------------------- */
+
+.analyzer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+}
+
+/* I blocchi da 4. Vanno a capo solo se lo schermo e' davvero troppo stretto. */
+.iban-blocks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--iban-block-size);
+  font-weight: 600;
+  line-height: 1.15;
+  font-variant-numeric: slashed-zero;
+  font-feature-settings: "zero" 1;
+}
+
+.iban-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.iban-group__chars {
+  display: flex;
+  letter-spacing: 0.08em;
+}
+
+/* Conteggio sequenziale sotto ogni blocco: guida il conteggio ad alta voce. */
+.iban-group__count {
+  display: flex;
+  font-family: var(--font-ui);
+  font-size: var(--iban-count-size);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.iban-group__count span {
+  inline-size: 1ch;
+  text-align: center;
+}
+
+/* Lo zero evidenziato: la causa n.1 di errore di trascrizione (§8.3). */
+.iban-zero {
+  color: var(--zero);
+  font-weight: 800;
+}
+
+/* Zeri consecutivi: evidenziazione ancora piu' marcata. */
+.iban-zero--run {
+  background: var(--zero-soft);
+  border-radius: var(--radius-sm);
+  padding-inline: 0.06em;
+}
+
+/* Caratteri ambigui: O e I maiuscole, che possono confondersi con 0 e 1. */
+.iban-ambiguous {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.12em;
+}
+
+/* Modalita' Sportello: tutto schermo, niente distrazioni. */
+.analyzer--counter {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  justify-content: center;
+  padding: var(--space-4);
+  padding-block-end: calc(var(--touch-target) + var(--space-6));
+  background: var(--bg);
+  overflow-y: auto;
+}
+
+/* Inverti colori: alto contrasto assoluto, per anziani e luce forte (§8.1). */
+[data-invert="true"] .analyzer,
+[data-invert="true"] .analyzer--counter {
+  background: #000;
+  color: #fff;
+}
+
+[data-invert="true"] .iban-zero {
+  color: #ffe066;
+}
+
+[data-invert="true"] .iban-zero--run {
+  background: #4a3a00;
+}
+
+[data-invert="true"] .iban-group__count {
+  color: #d8d8d8;
+}
+
+/* --------------------------------------------------------------------------
+   7. Onboarding
+   -------------------------------------------------------------------------- */
+
+.onboarding {
+  max-inline-size: 40rem;
+  margin-inline: auto;
+  padding: var(--space-5) var(--space-4);
+}
+
+.onboarding__title {
+  margin-block-end: var(--space-4);
+  font-size: var(--fs-2xl);
+  font-weight: 750;
+}
+
+/* Il disclaimer e' un testo lungo e vincolante (§12.2): va letto, non saltato. */
+.disclaimer {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  white-space: pre-line;
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.option-group {
+  display: grid;
+  gap: var(--space-2);
+  margin-block: var(--space-3) var(--space-5);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.option[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* --------------------------------------------------------------------------
+   8. Area di stampa
+   --------------------------------------------------------------------------
+   Esiste sempre nel DOM (src/ui/print.js la riempie) ma non si vede a schermo.
+   Viene mostrata solo da print.css, che nasconde il resto dell'interfaccia. */
+
+#print-host {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   9. Viste: intestazione, ricerca, elenco
+   -------------------------------------------------------------------------- */
+
+.app-header__brand {
+  font-size: var(--fs-lg);
+  line-height: 1;
+  color: var(--accent);
+}
+
+.section-title {
+  margin-block: var(--space-4) var(--space-2);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.view-title {
+  margin-block-end: var(--space-4);
+  font-size: var(--fs-2xl);
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.hint {
+  margin-block: var(--space-2);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+/* --- Ricerca --- */
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-3);
+}
+
+.search-bar__icon {
+  flex: none;
+  font-size: var(--fs-lg);
+  color: var(--text-muted);
+}
+
+.search-bar .field__input {
+  flex: 1;
+}
+
+.list-count {
+  margin-block: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  padding-block: var(--space-6);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-state .btn {
+  margin-block-start: var(--space-4);
+}
+
+/* --- Schede conto --- */
+
+.account-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.account-card__top > div:first-child {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.favorite {
+  flex: none;
+  font-size: var(--fs-xl);
+  color: var(--warn);
+}
+
+.favorite[aria-pressed="false"] {
+  color: var(--text-muted);
+}
+
+.account-row__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+}
+
+.account-row__name {
+  font-weight: 650;
+}
+
+.account-row__iban {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  font-variant-numeric: slashed-zero;
+  font-feature-settings: "zero" 1;
+}
+
+/* --------------------------------------------------------------------------
+   10. Vista dettaglio
+   -------------------------------------------------------------------------- */
+
+.detail-header {
+  margin-block-end: var(--space-4);
+}
+
+.detail-header__bank {
+  color: var(--text-muted);
+}
+
+.detail-header__fav {
+  margin-block-start: var(--space-1);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--warn);
+}
+
+.kv-list {
+  display: grid;
+  gap: var(--space-2);
+  margin-block: var(--space-4);
+}
+
+.kv {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  font-size: var(--fs-sm);
+}
+
+.kv__key {
+  flex: none;
+  inline-size: 34%;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.kv__value {
+  flex: 1;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.analyzer__controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   11. Form
+   -------------------------------------------------------------------------- */
+
+.form {
+  max-inline-size: 34rem;
+}
+
+.field--inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: var(--touch-target);
+}
+
+.field--inline input[type="checkbox"] {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   12. Incolla intelligente, sheet e impostazioni
+   -------------------------------------------------------------------------- */
+
+.iban-paste {
+  max-inline-size: 34rem;
+  margin-block-end: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.iban-paste__title {
+  margin-block-end: var(--space-1);
+  font-size: var(--fs-lg);
+}
+
+.iban-paste .hint {
+  margin-block-end: var(--space-3);
+  color: var(--text-muted);
+}
+
+.iban-paste__results {
+  margin-block-start: var(--space-3);
+}
+
+.iban-paste__content {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.iban-paste__candidate-value {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-base);
+  font-variant-numeric: slashed-zero;
+  overflow-wrap: anywhere;
+}
+
+.iban-paste__candidates {
+  display: grid;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+.iban-paste__candidate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  inline-size: 100%;
+  min-block-size: var(--touch-target);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.iban-paste__candidate[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.iban-paste__candidate-action {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.sheet__body {
+  margin-block-end: var(--space-4);
+}
+
+.sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.sheet__actions > * {
+  flex: 1 1 40%;
+}
+
+.settings {
+  max-inline-size: 40rem;
+}
+
+.settings__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.settings__actions > * {
+  flex: 1 1 40%;
+}
+
+.onboarding__lead {
+  font-size: var(--fs-lg);
+  font-weight: 650;
+}
+
+.onboarding__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-start: var(--space-5);
+}
+
+.onboarding__actions > * {
+  flex: 1 1 40%;
+}

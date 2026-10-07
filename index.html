@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      ATTENZIONE: mai `user-scalable=no`.
+      Il pinch-to-zoom deve restare possibile: e' un requisito di accessibilita'
+      per un pubblico con vista non perfetta (MioIBAN-SPEC.md §10).
+      `viewport-fit=cover` serve per gli iPhone con notch e le safe-area.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>MioIBAN</title>
+    <meta
+      name="description"
+      content="Archivio locale di IBAN con analisi anti-errore per lo sportello. Nessun server, nessun account: i dati restano sul tuo dispositivo."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#1d4ed8" />
+
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="MioIBAN" />
+
+    <!--
+      Nessuna risorsa remota: niente font, script o immagini da domini terzi.
+      E' la condizione perche' la CSP possa restare `default-src 'self'`
+      (MioIBAN-SPEC.md §5.3, §11.1).
+    -->
+    <link rel="stylesheet" href="./src/styles/main.css" />
+    <link rel="stylesheet" href="./src/styles/print.css" media="print" />
+  </head>
+
+  <body>
+    <div class="app" id="app">
+      <header class="app-header" id="app-header">
+        <span class="app-header__title" id="app-title">MioIBAN</span>
+      </header>
+
+      <main class="app-main" id="app-main" tabindex="-1">
+        <!-- Contenuto iniziale: viene sostituito da src/app.js all'avvio. -->
+        <p class="status status--warn" id="boot-status">
+          <span class="status__icon" aria-hidden="true">&#9203;</span>
+          <span>Caricamento…</span>
+        </p>
+      </main>
+
+      <!-- Barra azioni fissa in basso: raggiungibile col pollice (§8.1). -->
+      <div class="action-bar" id="app-actions" hidden></div>
+    </div>
+
+    <!-- Contenitori gestiti dal codice: toast, bottom sheet, area di stampa. -->
+    <div id="toast-host"></div>
+    <div id="sheet-host"></div>
+
+    <!--
+      Area di stampa: nascosta a schermo, visibile solo in stampa (print.css).
+      Costruita al momento della stampa, cosi' l'anteprima usa la lingua attiva.
+    -->
+    <div id="print-host" aria-hidden="true"></div>
+
+    <noscript>
+      <div class="app-main">
+        <p class="status status--error">
+          <span class="status__icon" aria-hidden="true">&#10005;</span>
+          <span>
+            MioIBAN ha bisogno di JavaScript per funzionare. Il programma è
+            disattivato in questo browser.
+          </span>
+        </p>
+      </div>
+    </noscript>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

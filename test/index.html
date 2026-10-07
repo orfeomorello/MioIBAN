@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="it" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MioIBAN — Test</title>
+    <!--
+      Pagina di test di MioIBAN.
+
+      PERCHE' NEL BROWSER E NON CON UN RUNNER
+      Il progetto non ha build step (MioIBAN-SPEC.md §5) e il layer di storage
+      usa IndexedDB, che non esiste in Node. Questa pagina e' quindi
+      l'ambiente di test naturale: si apre nel browser, non richiede npm,
+      non richiede dipendenze di sviluppo.
+
+      PRIMA DI APRIRLA: copare le dipendenze con `node tools/vendor.mjs`,
+      altrimenti l'import di vendor/ibantools.js fallisce e la pagina lo dice.
+
+      Servire la cartella con un server statico (i moduli ES non funzionano
+      da file://). Vedi README.md.
+    -->
+    <link rel="stylesheet" href="../src/styles/main.css" />
+    <style>
+      .t-pass { color: var(--ok); }
+      .t-fail { color: var(--error); font-weight: 700; }
+      .t-skip { color: var(--warn); }
+      #results li { margin-block-end: 0.35rem; }
+      pre { background: var(--surface-2); padding: 1rem; border-radius: 10px; overflow-x: auto; }
+    </style>
+  </head>
+  <body>
+    <main class="app-main" style="max-inline-size: 60rem; margin-inline: auto">
+      <h1>MioIBAN — Test</h1>
+      <p id="summary" class="status status--warn">Esecuzione in corso…</p>
+      <ul id="results" role="list"></ul>
+
+      <details id="help" hidden style="margin-block-start: 2rem">
+        <summary>Come risolvere</summary>
+        <pre>
+1. Copare le dipendenze (una volta sola):
+
+     node tools/vendor.mjs
+
+   Se manca Node, si possono scaricare a mano i due file indicati in
+   tools/vendor.mjs e metterli in vendor/.
+
+2. Servire la cartella con un server statico, perche' i moduli ES non
+   funzionano aprendo il file direttamente (file://):
+
+     python -m http.server 8080
+     # oppure
+     npx serve .
+
+3. Aprire http://localhost:8080/test/
+        </pre>
+      </details>
+    </main>
+
+    <script type="module">
+      /* -------------------------------------------------------------- *
+       * Mini harness
+       * -------------------------------------------------------------- */
+
+      const results = [];
+
+      function check(name, fn) {
+        try {
+          fn();
+          results.push({ name, ok: true });
+        } catch (err) {
+          results.push({ name, ok: false, error: err && err.message ? err.message : String(err) });
+        }
+      }
+
+      function eq(actual, expected, label) {
+        const a = JSON.stringify(actual);
+        const e = JSON.stringify(expected);
+        if (a !== e) throw new Error(`${label ? label + ": " : ""}atteso ${e}, ottenuto ${a}`);
+      }
+
+      function ok(cond, label) {
+        if (!cond) throw new Error(label || "condizione falsa");
+      }
+
+      /* -------------------------------------------------------------- *
+       * Import dei moduli del progetto
+       * -------------------------------------------------------------- */
+
+      let iban, errors, vectors, i18n, formUi;
+      try {
+        [iban, errors, vectors, i18n, formUi] = await Promise.all([
+          import("../src/core/iban.js"),
+          import("../src/core/errors.js"),
+          import("./cin-vectors.js"),
+          import("../src/i18n/index.js"),
+          import("../src/ui/form.js"),
+        ]);
+      } catch (err) {
+        document.getElementById("summary").className = "status status--error";
+        document.getElementById("summary").textContent =
+          "Impossibile caricare i moduli: " + (err && err.message ? err.message : String(err));
+        document.getElementById("help").hidden = false;
+        throw err;
+      }
+
+      i18n.initI18n();
+      // I test devono partire SEMPRE in italiano, altrimenti su un browser con
+      // lingua inglese fallirebbero per il motivo sbagliato. `persist: false`
+      // evita di alterare le preferenze salvate di chi apre questa pagina.
+      i18n.setLanguage("it", { persist: false, updateUrl: false });
+      const { IBAN_CODE } = errors;
+      const copyMessageLimit = 20000;
+
+      /* -------------------------------------------------------------- *
+       * Vettori di validazione
+       *
+       * Entrambi verificati a mano, non copiati da una libreria:
+       *  - IT60X0542811101000000123456 : mod-97 = 1 (valido) e CIN = 'X'
+       *  - DE89370400440532013000      : mod-97 = 1 (valido), paese senza CIN
+       * -------------------------------------------------------------- */
+
+      const IBAN_IT_VALID = "IT60X0542811101000000123456";
+      const IBAN_DE_VALID = "DE89370400440532013000";
+
+      /* -------------------------------------------------------------- *
+       * 1. Normalizzazione (limite L5 di ibantools)
+       * -------------------------------------------------------------- */
+
+      check("normalizeIban: rimuove spazi e trattini", () => {
+        eq(iban.normalizeIban("IT60 X054-2811 1010 0000 0123 456"), IBAN_IT_VALID);
+      });
+
+      check("normalizeIban: rimuove NBSP (U+00A0), il caso che rompe ibantools", () => {
+        const withNbsp = "IT60\u00A0X054\u00A02811\u00A01010\u00A00000\u00A00123\u00A0456";
+        eq(iban.normalizeIban(withNbsp), IBAN_IT_VALID);
+      });
+
+      check("normalizeIban: rimuove tab, a capo e zero-width space", () => {
+        const dirty = "IT60\tX054\n2811\u200B1010 0000\r\n0123 456";
+        eq(iban.normalizeIban(dirty), IBAN_IT_VALID);
+      });
+
+      check("normalizeIban: converte in maiuscolo", () => {
+        eq(iban.normalizeIban("it60x0542811101000000123456"), IBAN_IT_VALID);
+      });
+
+      check("normalizeIban: input non stringa -> stringa vuota", () => {
+        eq(iban.normalizeIban(null), "");
+        eq(iban.normalizeIban(undefined), "");
+        eq(iban.normalizeIban(42), "");
+      });
+
+      /* -------------------------------------------------------------- *
+       * 2. Validazione
+       * -------------------------------------------------------------- */
+
+      check("validateIban: IBAN italiano valido -> VALID con CIN verificato", () => {
+        const r = iban.validateIban(IBAN_IT_VALID);
+        eq(r.code, IBAN_CODE.VALID, "code");
+        ok(r.valid, "valid deve essere true");
+        ok(r.cin && r.cin.applicable && r.cin.ok, "il CIN deve risultare verificato");
+        eq(r.i18nKey, "validation.validWithCin", "i18nKey");
+      });
+
+      check("validateIban: IBAN tedesco valido -> VALID senza CIN", () => {
+        const r = iban.validateIban(IBAN_DE_VALID);
+        eq(r.code, IBAN_CODE.VALID, "code");
+        eq(r.cin, null, "per DE il CIN non esiste");
+        eq(r.i18nKey, "validation.valid", "i18nKey");
+      });
+
+      check("validateIban: accetta l'IBAN italiano scritto in modo sporco", () => {
+        const r = iban.validateIban("IT60 X054 2811 1010 0000 0123 456");
+        eq(r.code, IBAN_CODE.VALID, "code");
+        eq(r.electronic, IBAN_IT_VALID, "electronic");
+      });
+
+      check("validateIban: campo vuoto -> EMPTY", () => {
+        eq(iban.validateIban("").code, IBAN_CODE.EMPTY);
+        eq(iban.validateIban("   ").code, IBAN_CODE.EMPTY);
+      });
+
+      check("validateIban: troncato di un carattere -> WRONG_LENGTH", () => {
+        const r = iban.validateIban(IBAN_IT_VALID.slice(0, 26));
+        eq(r.code, IBAN_CODE.WRONG_LENGTH, "code");
+      });
+
+      check("validateIban: una cifra alterata -> CHECKSUM", () => {
+        // Ultimo carattere 6 -> 7: la lunghezza resta giusta, il mod-97 cambia.
+        const r = iban.validateIban(IBAN_IT_VALID.slice(0, 26) + "7");
+        eq(r.code, IBAN_CODE.CHECKSUM, "code");
+        eq(r.i18nKey, "validation.checksum", "i18nKey");
+      });
+
+      check("validateIban: paese non nel registro IBAN -> UNKNOWN_COUNTRY", () => {
+        const r = iban.validateIban("US64SVBKUS6S3300958879");
+        eq(r.code, IBAN_CODE.UNKNOWN_COUNTRY, "code");
+      });
+
+      check("formatIban: raggruppa a blocchi di 4", () => {
+        eq(iban.formatIban(IBAN_IT_VALID), "IT60 X054 2811 1010 0000 0123 456");
+      });
+
+      check("expectedLengthFor: 27 per IT, 22 per DE", () => {
+        eq(iban.expectedLengthFor("IT"), 27);
+        eq(iban.expectedLengthFor("DE"), 22);
+        eq(iban.expectedLengthFor("ZZ"), null);
+      });
+
+      /* -------------------------------------------------------------- *
+       * 3. CIN italiano (§4.6) — il presidio piu' importante
+       * -------------------------------------------------------------- */
+
+      check("computeCin: vettore di riferimento -> 'X'", () => {
+        eq(iban.computeCin(vectors.CIN_REFERENCE.body), vectors.CIN_REFERENCE.expected);
+      });
+
+      check("computeCin: input di lunghezza sbagliata -> null", () => {
+        eq(iban.computeCin("123"), null);
+        eq(iban.computeCin(""), null);
+      });
+
+      check("checkCin: rileva il CIN corretto sull'IBAN italiano", () => {
+        const r = iban.checkCin(IBAN_IT_VALID);
+        ok(r.applicable, "deve essere applicabile per IT");
+        eq(r.expected, "X", "expected");
+        eq(r.actual, "X", "actual");
+        eq(r.ok, true, "ok");
+      });
+
+      check("checkCin: non si applica ai paesi senza CIN", () => {
+        eq(iban.checkCin(IBAN_DE_VALID).applicable, false);
+      });
+
+      for (const v of vectors.CIN_VECTORS) {
+        check(`vettore CIN ${v.iban} (${v.verified ? "verificato" : "DA CONFERMARE"})`, () => {
+          const r = iban.validateIban(v.iban);
+          eq(r.code, IBAN_CODE.VALID, "l'IBAN deve essere valido");
+          ok(r.cin && r.cin.ok, `il CIN calcolato (${r.cin && r.cin.expected}) deve coincidere`);
+        });
+      }
+
+      for (const v of vectors.CIN_NEGATIVE_VECTORS) {
+        check(`vettore CIN negativo ${v.iban}`, () => {
+          const r = iban.validateIban(v.iban);
+          eq(r.code, IBAN_CODE.CIN_MISMATCH, "deve essere segnalato CIN_MISMATCH");
+          eq(r.cin.expected, v.expectedCin, "CIN atteso");
+        });
+      }
+
+      check("vettori CIN: il set e' completo per il rilascio?", () => {
+        const status = vectors.vectorSetStatus();
+        if (!status.ready) {
+          throw new Error(
+            `MANCANO ${status.missing} vettori verificati (ne servono ${vectors.MINIMUM_POSITIVE_VECTORS}): ` +
+              "vedi MioIBAN-SPEC.md §4.6, garanzia n. 4",
+          );
+        }
+      });
+
+      /* -------------------------------------------------------------- *
+       * 4. Componenti ABI / CAB / conto (limite L3)
+       * -------------------------------------------------------------- */
+
+      check("extractComponents: ABI, CAB e conto corretti per l'Italia", () => {
+        const c = iban.extractComponents(IBAN_IT_VALID);
+        ok(c, "deve restituire le componenti");
+        eq(c.countryCode, "IT");
+        eq(c.cin, "X", "CIN");
+        eq(c.abi, "05428", "ABI");
+        eq(c.cab, "11101", "CAB");
+        eq(c.conto, "000000123456", "conto");
+        eq(c.sepa, true, "SEPA");
+      });
+
+      check("extractComponents: il conto NON e' l'intero BBAN (regressione L3)", () => {
+        const c = iban.extractComponents(IBAN_IT_VALID);
+        ok(c.conto.length === 12, "il conto deve avere 12 caratteri");
+        ok(c.conto !== c.bban, "il conto non deve coincidere con il BBAN");
+      });
+
+      check("extractComponents: IBAN non valido -> null", () => {
+        eq(iban.extractComponents("IT00X0000000000000000000000"), null);
+      });
+
+      /* -------------------------------------------------------------- *
+       * 5. BIC
+       * -------------------------------------------------------------- */
+
+      check("validateBic: BIC valido", () => {
+        eq(iban.validateBic("BCITITMM").code, errors.BIC_CODE.VALID);
+      });
+
+      check("validateBic: campo vuoto -> EMPTY", () => {
+        eq(iban.validateBic("").code, errors.BIC_CODE.EMPTY);
+      });
+
+      check("validateBic: formato errato -> WRONG_FORMAT", () => {
+        eq(iban.validateBic("AB1CITMM").code, errors.BIC_CODE.WRONG_FORMAT);
+      });
+
+      /* -------------------------------------------------------------- *
+       * 6. Estrazione di candidati da testo libero (limite L4)
+       * -------------------------------------------------------------- */
+
+      check("extractCandidates: trova un IBAN dentro testo sporco", () => {
+        const text = `Ciao, il mio IBAN e' ${IBAN_IT_VALID} grazie mille!`;
+        eq(iban.extractCandidates(text), [IBAN_IT_VALID]);
+      });
+
+      check("extractCandidates: trova due IBAN e ignora un falso", () => {
+        const text =
+          `Primo: ${IBAN_IT_VALID}\n` +
+          `Secondo: DE89 3704 0044 0532 0130 00\n` +
+          `Falso: IT00X0000000000000000000000`;
+        const found = iban.extractCandidates(text);
+        ok(found.includes(IBAN_IT_VALID), "deve trovare l'IBAN italiano");
+        ok(found.includes(IBAN_DE_VALID), "deve trovare l'IBAN tedesco");
+        eq(found.length, 2, "il falso non deve passare");
+      });
+
+      check("extractCandidates: IBAN spezzato su due righe", () => {
+        const text = "IBAN:\nIT60X0542811101000\n000123456\n";
+        eq(iban.extractCandidates(text), [IBAN_IT_VALID]);
+      });
+
+      check("extractCandidates: nasconde l'IBAN tra caratteri invisibili", () => {
+        const text = `IBAN\u00A0${IBAN_IT_VALID}\u200B`;
+        eq(iban.extractCandidates(text), [IBAN_IT_VALID]);
+      });
+
+      check("extractCandidates: testo senza IBAN -> lista vuota", () => {
+        eq(iban.extractCandidates("nessun iban qui, solo testo"), []);
+      });
+
+      /* -------------------------------------------------------------- *
+       * 7. Incolla intelligente nel form (F-03)
+       * -------------------------------------------------------------- */
+
+      check("form: un messaggio con un IBAN compila il campo senza salvare", () => {
+        let saveCalls = 0;
+        const view = formUi.createFormView({
+          groups: [],
+          onSave: () => { saveCalls += 1; },
+          onCancel: () => {},
+          checkDuplicate: async () => null,
+          onOpenExisting: () => {},
+        });
+        const host = document.createElement("div");
+        host.appendChild(view.element);
+        try {
+          const message = host.querySelector("#paste-message");
+          const ibanInput = host.querySelector("#field-iban");
+          message.value = `Ciao, il mio IBAN e' ${IBAN_IT_VALID}, grazie!`;
+          message.dispatchEvent(new Event("input", { bubbles: true }));
+          eq(ibanInput.value, "IT60 X054 2811 1010 0000 0123 456", "IBAN proposto nel campo");
+          eq(saveCalls, 0, "il conto non va salvato automaticamente");
+          ok(host.textContent.includes("La scelta è nel campo IBAN"), "candidato proposto nel campo e controllabile");
+          const oversized = host.querySelector("#paste-message");
+          oversized.value = "x".repeat(20001) + IBAN_IT_VALID;
+          oversized.dispatchEvent(new Event("input", { bubbles: true }));
+          eq(ibanInput.value, "", "il testo oltre il limite non deve essere analizzato");
+          ok(host.textContent.includes("Il testo supera il limite di sicurezza"), "messaggio del limite visibile");
+          ok(host.querySelector(".iban-paste__results").textContent.includes("Il testo supera il limite di sicurezza"), "messaggio del limite visibile anche nei risultati");
+          const secondMessage = host.querySelector("#paste-message");
+          secondMessage.value = "Nessun IBAN in questo messaggio";
+          secondMessage.dispatchEvent(new Event("input", { bubbles: true }));
+          eq(ibanInput.value, "", "il candidato automatico obsoleto va rimosso");
+          ok(host.textContent.includes("Non ho trovato IBAN"), "feedback quando non si trova un IBAN");
+        } finally {
+          host.remove();
+        }
+      });
+
+      check("form: un candidato non sovrascrive l'IBAN esistente senza consenso", () => {
+        const view = formUi.createFormView({
+          groups: [],
+          onSave: () => {},
+          onCancel: () => {},
+          checkDuplicate: async () => null,
+          onOpenExisting: () => {},
+        });
+        const host = document.createElement("div");
+        host.appendChild(view.element);
+        try {
+          const message = host.querySelector("#paste-message");
+          const ibanInput = host.querySelector("#field-iban");
+          ibanInput.value = "DE89 3704 0044 0532 0130 00";
+          message.value = `Il nuovo IBAN è ${IBAN_IT_VALID}`;
+          message.dispatchEvent(new Event("input", { bubbles: true }));
+          eq(ibanInput.value, "DE89 3704 0044 0532 0130 00", "il valore già inserito resta invariato");
+          ok(host.textContent.includes("non verrà sostituito senza il tuo consenso"), "avviso di conferma esplicita");
+          ok(host.querySelector(".iban-paste__results").querySelector(".iban-paste__candidate"), "risultato esplicito per confermare la sostituzione");
+          host.querySelector(".iban-paste__candidate").click();
+          eq(ibanInput.value, "IT60 X054 2811 1010 0000 0123 456", "candidato sostituito dopo il clic");
+        } finally {
+          host.remove();
+        }
+      });
+
+      check("form: più IBAN richiedono una scelta esplicita", () => {
+        let saveCalls = 0;
+        const view = formUi.createFormView({
+          groups: [],
+          onSave: () => { saveCalls += 1; },
+          onCancel: () => {},
+          checkDuplicate: async () => null,
+          onOpenExisting: () => {},
+        });
+        const host = document.createElement("div");
+        host.appendChild(view.element);
+        try {
+          const message = host.querySelector("#paste-message");
+          const ibanInput = host.querySelector("#field-iban");
+          message.value = `IT ${IBAN_IT_VALID} oppure DE ${IBAN_DE_VALID}`;
+          message.dispatchEvent(new Event("input", { bubbles: true }));
+          const choices = host.querySelectorAll(".iban-paste__candidate");
+          eq(choices.length, 2, "numero di candidati mostrati");
+          eq(ibanInput.value, "", "nessun candidato scelto automaticamente");
+          choices[1].click();
+          eq(ibanInput.value, "DE89 3704 0044 0532 0130 00", "candidato selezionato");
+          eq(saveCalls, 0, "anche la selezione non deve salvare automaticamente");
+          message.value = `Solo il tedesco: ${IBAN_DE_VALID}`;
+          message.dispatchEvent(new Event("input", { bubbles: true }));
+          eq(ibanInput.value, "DE89 3704 0044 0532 0130 00", "un singolo candidato aggiornato sostituisce la selezione precedente");
+        } finally {
+          host.remove();
+        }
+      });
+
+      /* -------------------------------------------------------------- *
+       * 8. Struttura per l'IBANAnalyzer (§8)
+       * -------------------------------------------------------------- */
+
+      check("splitForAnalyzer: blocchi di 4, ultimo piu' corto", () => {
+        const { blocks } = iban.splitForAnalyzer(IBAN_IT_VALID);
+        eq(blocks.length, 7, "numero di blocchi");
+        eq(blocks.map((b) => b.chars.length), [4, 4, 4, 4, 4, 4, 3]);
+      });
+
+      check("splitForAnalyzer: il conteggio riparte da 1 in ogni blocco", () => {
+        const { blocks } = iban.splitForAnalyzer(IBAN_IT_VALID);
+        for (const b of blocks) {
+          eq(b.chars.map((c) => c.seq), b.chars.map((_, i) => i + 1), `blocco ${b.index}`);
+        }
+      });
+
+      check("splitForAnalyzer: la posizione assoluta e' progressiva", () => {
+        const { blocks } = iban.splitForAnalyzer(IBAN_IT_VALID);
+        const positions = blocks.flatMap((b) => b.chars.map((c) => c.position));
+        eq(positions[0], 1);
+        eq(positions[positions.length - 1], 27);
+      });
+
+      check("splitForAnalyzer: evidenzia gli zeri", () => {
+        const { blocks } = iban.splitForAnalyzer(IBAN_IT_VALID);
+        const zeros = blocks.flatMap((b) => b.chars).filter((c) => c.isZero);
+        eq(zeros.length, 9, "zeri nell'IBAN di riferimento");
+      });
+
+      check("splitForAnalyzer: marca le sequenze di zeri consecutivi", () => {
+        const { blocks } = iban.splitForAnalyzer(IBAN_IT_VALID);
+        const runs = blocks.flatMap((b) => b.chars).filter((c) => c.inZeroRun);
+        ok(runs.length >= 2, "il blocco '0000' deve risultare una sequenza");
+      });
+
+      check("splitForAnalyzer: uno zero isolato non e' una sequenza", () => {
+        const { blocks } = iban.splitForAnalyzer("IT60X0542811101000000123456".replace("1010", "1212"));
+        const flagged = blocks.flatMap((b) => b.chars).filter((c) => c.inZeroRun);
+        // Nel blocco '1212' non ci sono zeri; restano solo quelli dei blocchi 0000.
+        ok(flagged.every((c) => c.isZero), "solo gli zeri possono stare in una sequenza");
+      });
+
+      /* -------------------------------------------------------------- *
+       * 9. Multilingua (§5.9)
+       * -------------------------------------------------------------- */
+
+      check("i18n: i dizionari hanno le stesse chiavi (checkCatalogues)", () => {
+        const r = i18n.checkCatalogues();
+        ok(r.ok, "chiavi disallineate:\n" + r.problems.join("\n"));
+      });
+
+      check("i18n: t() restituisce la stringa attesa", () => {
+        eq(i18n.t("analyzer.countLabel"), "Conta");
+      });
+
+      check("i18n: t() interpola i segnaposto", () => {
+        ok(i18n.t("accounts.count", { count: 3 }).includes("3"), "deve contenere il numero");
+      });
+
+      check("i18n: i plurali usano Intl.PluralRules", () => {
+        eq(i18n.t("accounts.count", { count: 1 }), "1 conto");
+        eq(i18n.t("accounts.count", { count: 2 }), "2 conti");
+      });
+
+      check("i18n: chiave mancante -> torna la chiave (non undefined)", () => {
+        eq(i18n.t("non.esiste"), "non.esiste");
+      });
+
+      check("i18n: pickLanguage sceglie la prima lingua supportata", () => {
+        eq(i18n.pickLanguage(["de-DE", "fr-FR", "en-GB"]), "en");
+        eq(i18n.pickLanguage(["it-CH"]), "it");
+        eq(i18n.pickLanguage(["ja-JP"]), "it", "fallback");
+      });
+
+      check("i18n: leggere ?lang= dall'URL", () => {
+        const original = location.search;
+        history.replaceState(null, "", "?lang=en");
+        eq(i18n.readLangFromUrl(), "en");
+        history.replaceState(null, "", "?lang=zz");
+        eq(i18n.readLangFromUrl(), null, "lingua non supportata");
+        history.replaceState(null, "", original || location.pathname);
+      });
+
+      check("i18n: cambia lingua e aggiorna <html lang>", () => {
+        // persist/updateUrl a false: un test non deve modificare la preferenza
+        // dell'utente ne' l'URL della pagina.
+        i18n.setLanguage("en", { persist: false, updateUrl: false });
+        eq(i18n.t("analyzer.countLabel"), "Count");
+        eq(document.documentElement.lang, "en");
+        i18n.setLanguage("it", { persist: false, updateUrl: false });
+        eq(document.documentElement.lang, "it");
+      });
+
+      check("i18n: formattazione date e numeri con Intl", () => {
+        const d = i18n.formatDate(new Date(Date.UTC(2026, 0, 15)), {
+          dateStyle: "short",
+          timeZone: "UTC",
+        });
+        ok(typeof d === "string" && d.length > 0, "la data deve essere formattata");
+        ok(typeof i18n.formatCurrency(12.5) === "string", "l'importo deve essere formattato");
+      });
+
+      /* -------------------------------------------------------------- *
+       * 10. Messaggi di validazione vincolanti (§7.1)
+       * -------------------------------------------------------------- */
+
+      check("i18n: i messaggi di validazione non usano parole vietate", () => {
+        const vietate = ["verificato", "garantito", "corretto al 100%", "sicuro"];
+        for (const lang of ["it", "en"]) {
+          i18n.setLanguage(lang, { persist: false, updateUrl: false });
+          for (const key of [
+            "validation.valid",
+            "validation.validWithCin",
+            "validation.cinMismatch",
+            "validation.checksum",
+          ]) {
+            const text = i18n.t(key).toLowerCase();
+            for (const parola of vietate) {
+              ok(!text.includes(parola), `${lang}/${key} contiene "${parola}": "${text}"`);
+            }
+          }
+        }
+        i18n.setLanguage("it", { persist: false, updateUrl: false });
+      });
+
+      check("i18n: ogni codice errore ha un testo non vuoto", () => {
+        for (const code of Object.values(IBAN_CODE)) {
+          if (code === IBAN_CODE.EMPTY) continue; // il campo vuoto non mostra nulla
+          const r = errors.makeResult(code);
+          ok(i18n.t(r.i18nKey).length > 0, `nessun testo per ${code}`);
+        }
+      });
+
+      /* -------------------------------------------------------------- *
+       * Report
+       * -------------------------------------------------------------- */
+
+      const passed = results.filter((r) => r.ok).length;
+      const failed = results.length - passed;
+      const list = document.getElementById("results");
+      const summary = document.getElementById("summary");
+
+      for (const r of results) {
+        const li = document.createElement("li");
+        const label = document.createElement("span");
+        label.className = r.ok ? "t-pass" : "t-fail";
+        label.textContent = r.ok ? "PASS  " : "FAIL  ";
+        li.appendChild(label);
+        li.appendChild(document.createTextNode(r.name));
+        if (!r.ok) {
+          const detail = document.createElement("div");
+          detail.className = "t-fail";
+          detail.style.marginInlineStart = "4rem";
+          detail.textContent = r.error;
+          li.appendChild(detail);
+        }
+        list.appendChild(li);
+      }
+
+      if (failed === 0) {
+        summary.className = "status status--ok";
+        summary.textContent = `✅ Tutti i ${passed} test superati.`;
+      } else {
+        summary.className = "status status--error";
+        summary.textContent = `❌ ${failed} test falliti su ${results.length} (${passed} superati).`;
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "name": "MioIBAN — I tuoi IBAN, chiari e pronti da copiare",
+  "short_name": "MioIBAN",
+  "description": "Archivio locale di IBAN con analisi anti-errore per lo sportello. Nessun server, nessun account: i dati restano solo sul tuo dispositivo.",
+  "lang": "it",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "mioiban",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#f7f8fa",
+  "theme_color": "#1d4ed8",
+  "categories": ["finance", "productivity", "utilities"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Aggiungi un conto",
+      "short_name": "Aggiungi",
+      "url": "./?action=add"
+    },
+    {
+      "name": "Cerca un conto",
+      "short_name": "Cerca",
+      "url": "./?action=search"
+    }
+  ]
+}

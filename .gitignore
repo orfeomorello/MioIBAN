@@ -1,0 +1,7 @@
+# Documento di specifica interno: resta in locale, non va su GitHub.
+MioIBAN-SPEC.md
+
+# Script di ricerca usati in fase di sviluppo: non fanno parte dell'app.
+download.mjs
+fetch_registry.py
+verify/
