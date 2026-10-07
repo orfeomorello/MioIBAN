@@ -2,8 +2,10 @@
  * MioIBAN — Dettaglio di un conto
  *
  * Mette insieme:
- *  - i dati del conto (titolare, banca, BIC, note);
- *  - l'IBANAnalyzer, che e' la ragione per cui l'app esiste (§8);
+ *  - l'intestazione (nome, banca, preferito) e l'IBANAnalyzer, che e' la
+ *    ragione per cui l'app esiste (§8);
+ *  - solo i dati che l'intestazione non mostra gia' (BIC, note ed
+ *    eventualmente il titolare, se diverso dal nome): niente doppioni;
  *  - le azioni rapide (copia, copia compatto, stampa, condividi);
  *  - modifica ed elimina, come icone in alto a destra nell'header.
  *
@@ -31,12 +33,6 @@ function metaRow(labelKey, value) {
   );
 }
 
-/** True se per questo IBAN e' stato verificato anche il CIN nazionale. */
-function hasNationalCheck(iban) {
-  const country = String(iban || "").slice(0, 2);
-  return country === "IT" || country === "SM";
-}
-
 /**
  * @param {object} options
  * @param {object} options.account
@@ -57,7 +53,6 @@ export function createDetailView(options) {
 
   const header = el("header", { class: "detail-header" });
   const details = el("div", { class: "kv-list" });
-  const honesty = el("p", { class: "hint" });
   const actionBar = el("div", { class: "action-bar__inner action-bar__inner--wrap" });
 
   // Modifica ed elimina vivono nell'header (in alto a destra): app.js monta
@@ -94,20 +89,21 @@ export function createDetailView(options) {
         : null,
     );
 
-    render(
-      details,
-      metaRow("fields.holder", account.titolare),
-      metaRow("fields.bank", account.banca),
+    // Titolare e banca sono gia' nell'intestazione: ripeterli qui sotto
+    // sarebbe rumore. Si mostrano solo i dati che sopra non ci sono (BIC e
+    // note); il titolare compare solo se aggiunge qualcosa, cioe' se e'
+    // diverso dal nome gia' mostrato. La validita' dell'IBAN e' gia' stata
+    // verificata all'inserimento: ripeterla qui non aiuta a copiarlo meglio.
+    const extraRows = [
+      account.titolare && account.titolare !== name
+        ? metaRow("fields.holder", account.titolare)
+        : null,
       metaRow("fields.bic", account.bic),
       metaRow("fields.note", account.note),
-    );
+    ].filter(Boolean);
 
-    // Nota onesta sui limiti del controllo (§7.1): per IT/SM e' stato
-    // verificato anche il CIN nazionale, altrove solo il checksum
-    // internazionale. Non si promette mai piu' di cio' che si e' controllato.
-    honesty.textContent = hasNationalCheck(account.iban)
-      ? t("validation.validWithCin")
-      : t("validation.valid");
+    render(details, extraRows);
+    details.hidden = extraRows.length === 0;
 
     // Le etichette dei pulsanti dell'header vanno aggiornate al cambio lingua.
     editBtn.setAttribute("aria-label", t("actions.edit"));
@@ -153,7 +149,7 @@ export function createDetailView(options) {
 
   paint();
 
-  const element = el("div", {}, header, analyzer.element, details, honesty);
+  const element = el("div", {}, header, analyzer.element, details);
 
   return {
     element,

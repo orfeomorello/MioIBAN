@@ -267,6 +267,10 @@ export function createSettingsView(options) {
           // Le preferenze possono essere cambiate dal backup: si riapplicano.
           applyTheme();
           applyTextSize();
+          // La lingua vive anche in memoria: senza setLanguage l'interfaccia
+          // resterebbe nella lingua precedente fino al riavvio dell'app.
+          const savedLang = inspected.preferences && inspected.preferences.lang;
+          if (typeof savedLang === "string" && savedLang) setLanguage(savedLang);
           showToast(t("backup.importOk"), { duration: 3500 });
           if (typeof opts.onReload === "function") opts.onReload();
         } catch {
