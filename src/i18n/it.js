@@ -195,8 +195,7 @@ export default {
     chooseTheme: "Scegli il tema",
     chooseTextSize: "Scegli la grandezza del testo",
     disclaimerTitle: "Prima di iniziare",
-    disclaimerAccept: "Ho letto e capito",
-    start: "Inizia",
+    disclaimerAccept: "Ho capito",
     // Testo VINCOLANTE: vedi MioIBAN-SPEC.md §12.2.
     disclaimer:
       "MioIBAN è un archivio locale fornito «così com'è», senza alcuna garanzia.\n\n" +

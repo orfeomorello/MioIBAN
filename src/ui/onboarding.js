@@ -6,8 +6,7 @@
  * restare ben visibili (non nascosti in un menu).
  *
  * Il disclaimer non e' un ostacolo da superare: e' l'informativa che rende
- * onesto il prodotto. Va letto, quindi il pulsante "Inizia" resta disabilitato
- * finche' l'utente non dichiara di averlo letto e capito.
+ * onesto il prodotto. Un solo bottone ("Ho capito") fa entrare nell'app.
  */
 
 import { el } from "./dom.js";
@@ -50,7 +49,6 @@ function optionGroup(name, options, current, onPick) {
  */
 export function createOnboarding(options) {
   const opts = options || {};
-  let accepted = false;
 
   /* --- Lingua --- */
   const languageGroup = optionGroup(
@@ -89,26 +87,14 @@ export function createOnboarding(options) {
     (value) => applyTextSize(value),
   );
 
-  /* --- Disclaimer --- */
-  const acceptBtn = el("button", {
-    type: "button",
-    class: "btn btn--big",
-    "aria-pressed": "false",
-    text: t("onboarding.disclaimerAccept"),
-    onClick: () => {
-      accepted = !accepted;
-      acceptBtn.setAttribute("aria-pressed", String(accepted));
-      startBtn.disabled = !accepted;
-    },
-  });
-
+  /* --- Disclaimer: un solo bottone, "Ho capito".
+     Due bottoni (accetta + inizia) disorientano: non e' chiaro cosa fare.
+     Toccare "Ho capito" dichiara di aver letto e fa entrare nell'app. */
   const startBtn = el("button", {
     type: "button",
     class: "btn btn--primary btn--big",
-    disabled: true,
-    text: t("onboarding.start"),
+    text: t("onboarding.disclaimerAccept"),
     onClick: () => {
-      if (!accepted) return;
       setPref("onboardingCompleted", true);
       if (typeof opts.onComplete === "function") opts.onComplete();
     },
@@ -133,7 +119,7 @@ export function createOnboarding(options) {
     el("h2", { class: "section-title", text: t("onboarding.disclaimerTitle") }),
     el("div", { class: "disclaimer", text: t("onboarding.disclaimer") }),
 
-    el("div", { class: "onboarding__actions" }, acceptBtn, startBtn),
+    el("div", { class: "onboarding__actions" }, startBtn),
   );
 
   // Nota: al cambio lingua app.js ricostruisce questa vista da capo

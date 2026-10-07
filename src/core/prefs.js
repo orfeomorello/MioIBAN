@@ -15,7 +15,7 @@ const NS = "mioiban.pref.";
 
 /** Valori di default. Devono restare allineati a MioIBAN-SPEC.md §6.1. */
 export const PREF_DEFAULTS = Object.freeze({
-  tema: "auto", // 'light' | 'dark' | 'auto'
+  tema: "light", // 'light' | 'dark' | 'auto' (default chiaro: lo cambia l'utente)
   vista: "schede", // 'schede' | 'righe'
   copyFormat: "spaced", // 'spaced' | 'compact'
   fontSize: "normal", // 'normal' | 'large' | 'xlarge'

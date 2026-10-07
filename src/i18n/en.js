@@ -190,8 +190,7 @@ export default {
     chooseTheme: "Choose a theme",
     chooseTextSize: "Choose the text size",
     disclaimerTitle: "Before you start",
-    disclaimerAccept: "I have read and understood",
-    start: "Get started",
+    disclaimerAccept: "I understand",
     // Binding text: see MioIBAN-SPEC.md §12.2.
     disclaimer:
       "MioIBAN is a local archive provided “as is”, with no warranty whatsoever.\n\n" +
