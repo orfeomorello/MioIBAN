@@ -8,7 +8,7 @@
  * classico e molto fastidioso in un'app senza framework.
  */
 
-import { el, render, clear, ICON } from "./dom.js";
+import { el, render, clear, icon } from "./dom.js";
 import { t } from "../i18n/index.js";
 import { filterAccounts, sortAccounts, accountDisplayName, countByGroup } from "../core/model.js";
 
@@ -63,13 +63,14 @@ function favoriteButton(account, handlers) {
     class: "btn btn--ghost btn--icon favorite",
     "aria-pressed": String(account.isFavorite === true),
     "aria-label": t("a11y.favoriteToggle"),
-    text: account.isFavorite ? ICON.star : ICON.starOutline,
     onClick: (event) => {
       // Il pulsante sta dentro una scheda cliccabile: non deve aprirla.
       event.stopPropagation();
       handlers.onToggleFavorite(account);
     },
-  });
+  },
+  icon(account.isFavorite ? "star" : "starOutline"),
+  );
 }
 
 /**
@@ -119,7 +120,7 @@ export function createListView(options) {
     el(
       "div",
       { class: "search-bar" },
-      el("span", { class: "search-bar__icon", "aria-hidden": "true", text: ICON.search }),
+      el("span", { class: "search-bar__icon", "aria-hidden": "true" }, icon("search")),
       searchInput,
     ),
     chipsContainer,
@@ -135,10 +136,11 @@ export function createListView(options) {
     class: "btn btn--big",
     "aria-label": t("actions.printAll"),
     title: t("actions.printAll"),
-    text: ICON.print,
     disabled: true,
     onClick: () => opts.onPrintAll(),
-  });
+  },
+  icon("print"),
+  );
 
   function paintActionBar() {
     printAllBtn.setAttribute("aria-label", t("actions.printAll"));
@@ -150,7 +152,7 @@ export function createListView(options) {
         class: "btn btn--primary btn--big",
         onClick: () => opts.onAdd(),
       },
-        el("span", { "aria-hidden": "true", text: ICON.plus }),
+        icon("plus"),
         el("span", { text: t("actions.add") }),
       ),
       printAllBtn,
@@ -158,9 +160,10 @@ export function createListView(options) {
         type: "button",
         class: "btn btn--big",
         "aria-label": t("settings.title"),
-        text: ICON.settings,
         onClick: () => opts.onOpenSettings(),
-      }),
+      },
+      icon("settings"),
+      ),
     );
   }
   paintActionBar();
@@ -180,12 +183,14 @@ export function createListView(options) {
       type: "button",
       class: "chip",
       "aria-pressed": String(!!filter.favoritesOnly),
-      text: `${ICON.star} ${t("accounts.favoritesOnly")}`,
       onClick: () => {
         opts.onFilterChange({ favoritesOnly: !filter.favoritesOnly });
         scheduleUpdate();
       },
-    });
+    },
+    icon("star"),
+    el("span", { text: t("accounts.favoritesOnly") }),
+    );
     chipsContainer.appendChild(favChip);
 
     // Passaggio schede/righe. Sta fra le chip e non nella barra azioni perche'

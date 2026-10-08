@@ -421,7 +421,7 @@ export function createFormView(options) {
     node.className = `status status--${result.level}`;
     render(
       node,
-      el("span", { class: "status__icon", "aria-hidden": "true", text: levelIcon(result.level) }),
+      el("span", { class: "status__icon", "aria-hidden": "true" }, levelIcon(result.level)),
       el("span", { text: t(result.i18nKey) }),
     );
   }
@@ -439,7 +439,7 @@ export function createFormView(options) {
     const name = account.alias || account.titolare || formatIban(account.iban);
     render(
       duplicateBox,
-      el("span", { class: "status__icon", "aria-hidden": "true", text: levelIcon("warn") }),
+      el("span", { class: "status__icon", "aria-hidden": "true" }, levelIcon("warn")),
       el("div", {},
         el("span", {
           text: account.alias

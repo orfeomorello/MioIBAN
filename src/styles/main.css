@@ -279,8 +279,17 @@ body {
   margin-inline-start: auto;
 }
 
-/* Nell'header il pulsante distruttivo resta ghost: solo l'icona e' rossa. */
-.app-header__actions .btn--danger {
+/* I pulsanti icona nell'header devono farsi notare: sfondo circolare e
+   glifo grande, come nelle app mobili. Vale per freccia, matita e cestino. */
+.app-header .btn--icon {
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+/* Nell'header il pulsante distruttivo resta leggero: solo l'icona e' rossa. */
+.app-header .app-header__actions .btn--danger {
   background: transparent;
   border-color: transparent;
 }
@@ -311,16 +320,7 @@ body {
 
 .action-bar__inner > * {
   flex: 1;
-}
-
-/* Nel dettaglio le azioni sono quattro: su schermi stretti vanno a capo
-   invece di diventare pulsanti minuscoli e intoccabili. */
-.action-bar__inner--wrap {
-  flex-wrap: wrap;
-}
-
-.action-bar__inner--wrap > * {
-  flex: 1 1 40%;
+  min-inline-size: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -434,6 +434,20 @@ body {
   line-height: 1.3;
 }
 
+/* Icone SVG inline: seguono la misura del testo e il colore del contesto
+   (anche chiaro/scuro), senza deformarsi. Nei bottoni lo spazio tra icona
+   e testo lo da' il gap; altrove serve un margine esplicito. */
+.icon {
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  flex: none;
+}
+
+.chip .icon,
+.detail-header__fav .icon {
+  margin-inline-end: var(--space-2);
+}
+
 .status--ok {
   background: var(--ok-soft);
   border-color: var(--ok);
@@ -517,6 +531,9 @@ body {
   background: var(--surface);
   font-size: var(--fs-sm);
   cursor: pointer;
+  /* Il testo non va mai a capo dentro la chip: e' il contenitore a mandare
+     le chip intere sulla riga successiva. */
+  white-space: nowrap;
 }
 
 .chip[aria-pressed="true"] {
@@ -642,23 +659,35 @@ body {
   text-underline-offset: 0.12em;
 }
 
-/* Modalita' Sportello: tutto schermo, niente distrazioni. */
-.analyzer--counter {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  justify-content: center;
-  padding: var(--space-4);
-  padding-block-end: calc(var(--touch-target) + var(--space-6));
-  background: var(--bg);
-  overflow-y: auto;
-}
-
 /* Inverti colori: alto contrasto assoluto, per anziani e luce forte (§8.1). */
-[data-invert="true"] .analyzer,
-[data-invert="true"] .analyzer--counter {
+[data-invert="true"] .analyzer {
   background: #000;
   color: #fff;
+}
+
+/* In inversione i bottoni non possono usare gli sfondi del tema: col tema
+   chiaro sarebbero bianchi su nero con testo bianco, cioe' invisibili.
+   Bianco e nero assoluti, in entrambi i temi. */
+[data-invert="true"] .analyzer .btn {
+  background: #111111;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+[data-invert="true"] .analyzer .chip {
+  background: #111111;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+[data-invert="true"] .analyzer .chip[aria-pressed="true"] {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
+
+[data-invert="true"] .analyzer .hint {
+  color: #d8d8d8;
 }
 
 [data-invert="true"] .iban-zero {
@@ -738,9 +767,10 @@ body {
    -------------------------------------------------------------------------- */
 
 .app-header__brand {
-  font-size: var(--fs-lg);
-  line-height: 1;
-  color: var(--accent);
+  flex: none;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: 8px;
 }
 
 .section-title {

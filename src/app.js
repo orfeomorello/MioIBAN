@@ -12,7 +12,7 @@
  * conoscono lo stato globale: tutta la logica di stato vive qui.
  */
 
-import { el, render, clear, mustFind, ICON } from "./ui/dom.js";
+import { el, render, clear, mustFind, icon } from "./ui/dom.js";
 import { initI18n, t, getCollator, onLanguageChange } from "./i18n/index.js";
 import { getPref, setPref, isStorageAvailable } from "./core/prefs.js";
 import * as storage from "./core/storage.js";
@@ -110,10 +110,18 @@ function paintHeader() {
           type: "button",
           class: "btn btn--ghost btn--icon",
           "aria-label": t("nav.back"),
-          text: ICON.back,
           onClick: goBack,
-        })
-      : el("span", { class: "app-header__brand", "aria-hidden": "true", text: ICON.starOutline }),
+        },
+        icon("back"),
+        )
+      : el("img", {
+          class: "app-header__brand",
+          src: "./icons/icon.svg",
+          alt: "",
+          width: "28",
+          height: "28",
+          "aria-hidden": "true",
+        }),
     el("span", { class: "app-header__title", text: title }),
     // Azioni della vista corrente in alto a destra (es. modifica ed elimina
     // nel dettaglio): il pattern standard delle app mobili.
@@ -461,7 +469,7 @@ function showFatal(messageKey, detail) {
     el(
       "div",
       { class: "status status--error" },
-      el("span", { class: "status__icon", "aria-hidden": "true", text: ICON.error }),
+      el("span", { class: "status__icon", "aria-hidden": "true" }, icon("x")),
       el("div", {},
         el("p", { text: t(messageKey) }),
         detail ? el("p", { class: "hint", text: String(detail) }) : null,

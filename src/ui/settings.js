@@ -6,7 +6,7 @@
  * di non perdere i dati, e nessuno puo' recuperarli al posto suo (§12.2).
  */
 
-import { el, render, ICON } from "./dom.js";
+import { el, render, icon } from "./dom.js";
 import { t, LANGUAGES, setLanguage, currentLanguage } from "../i18n/index.js";
 import { getPref, setPref } from "../core/prefs.js";
 import { applyTheme, applyTextSize, setTheme, setTextSize } from "./theme.js";
@@ -93,18 +93,6 @@ export function createSettingsView(options) {
     },
   );
 
-  /* --- Formato di copia predefinito --- */
-
-  const copyGroup = optionGroup(
-    t("settings.copyFormat"),
-    [
-      { value: "spaced", label: t("settings.copyFormatSpaced") },
-      { value: "compact", label: t("settings.copyFormatCompact") },
-    ],
-    getPref("copyFormat"),
-    (value) => setPref("copyFormat", value),
-  );
-
   /* --- Gruppi ---
      I gruppi sono previsti dal modello dati (§6) e dai filtri (§7, F-05):
      senza un modo per crearli, quelle funzioni resterebbero irraggiungibili. */
@@ -155,7 +143,6 @@ export function createSettingsView(options) {
               type: "button",
               class: "btn btn--ghost btn--icon",
               "aria-label": `${t("actions.delete")} — ${group.name}`,
-              text: ICON.trash,
               onClick: () =>
                 confirmSheet({
                   title: t("actions.delete"),
@@ -165,7 +152,9 @@ export function createSettingsView(options) {
                   destructive: true,
                   onConfirm: () => opts.onDeleteGroup(group),
                 }),
-            }),
+            },
+            icon("trash"),
+            ),
           );
         })
       : el("p", { class: "hint", text: t("settings.groupEmpty") }),
@@ -307,9 +296,6 @@ export function createSettingsView(options) {
 
     section("settings.language"),
     languageGroup,
-
-    section("settings.copyFormat"),
-    copyGroup,
 
     section("settings.groups"),
     groupsSection,

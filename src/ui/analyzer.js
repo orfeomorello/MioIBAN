@@ -22,10 +22,9 @@
  * uno screen reader sarebbe incomprensibile: meglio una stringa continua.
  */
 
-import { el, render, clear, remove, ICON } from "./dom.js";
+import { el, render, clear, icon } from "./dom.js";
 import { t, currentLanguage } from "../i18n/index.js";
 import { splitForAnalyzer, speechChunks, extractComponents } from "../core/iban.js";
-import { copyIbanWithFeedback, vibrate } from "./actions.js";
 
 /* ------------------------------------------------------------------ *
  * Sintesi vocale
@@ -267,11 +266,7 @@ export function renderIbanBlocks(electronic) {
  *
  * @param {object} options
  * @param {object}   options.account
- * @param {Function} [options.onClose]   Chiude la Modalita' Sportello.
- * @param {Function} [options.onPrint]
- * @param {Function} [options.onShare]
- * @returns {{element: HTMLElement, openCounter: Function, closeCounter: Function,
- *            destroy: Function, refreshLanguage: Function}}
+ * @returns {{element: HTMLElement, destroy: Function, refreshLanguage: Function}}
  */
 export function createAnalyzer(options) {
   const opts = options || {};
@@ -356,12 +351,6 @@ export function createAnalyzer(options) {
     onClick: () => setInverted(!inverted),
   });
 
-  const counterBtn = el("button", {
-    type: "button",
-    class: "btn",
-    onClick: () => openCounter(),
-  });
-
   const hint = el("p", { class: "hint", text: t("analyzer.zerosHighlighted") });
   const voiceNotice = el("p", { class: "status status--warn", hidden: true });
 
@@ -384,7 +373,6 @@ export function createAnalyzer(options) {
     modeGroup,
     el("div", { class: "analyzer__controls" }, readBtn, invertBtn),
     voiceNotice,
-    el("div", { class: "analyzer__controls" }, counterBtn),
   );
 
   /* --- Stato del pulsante di lettura --- */
@@ -394,7 +382,7 @@ export function createAnalyzer(options) {
     readBtn.dataset.speaking = speaking ? "true" : "false";
     render(
       readBtn,
-      el("span", { "aria-hidden": "true", text: speaking ? ICON.stop : ICON.speaker }),
+      icon(speaking ? "stop" : "play"),
       el("span", { text: speaking ? t("actions.stopReading") : t("actions.read") }),
     );
 
@@ -417,124 +405,13 @@ export function createAnalyzer(options) {
     }
   });
 
-  render(invertBtn, el("span", { "aria-hidden": "true", text: ICON.invert }), el("span", { text: t("actions.invertColors") }));
-  render(counterBtn, el("span", { "aria-hidden": "true", text: ICON.expand }), el("span", { text: t("actions.openAnalyzer") }));
-
-  /* ------------------------------------------------------------------ *
-   * Modalita' Sportello
-   * ------------------------------------------------------------------ */
-
-  let counterOverlay = null;
-  let wakeLock = null;
-
-  async function requestWakeLock() {
-    // Utile davvero: lo schermo che si spegne mentre si mostra l'IBAN
-    // all'impiegato e' un fastidio concreto. Se non e' disponibile, nulla.
-    try {
-      if (navigator.wakeLock && navigator.wakeLock.request) {
-        wakeLock = await navigator.wakeLock.request("screen");
-      }
-    } catch {
-      wakeLock = null;
-    }
-  }
-
-  async function releaseWakeLock() {
-    try {
-      if (wakeLock && wakeLock.release) await wakeLock.release();
-    } catch {
-      /* ignorato */
-    }
-    wakeLock = null;
-  }
-
-  function openCounter() {
-    if (counterOverlay) return;
-
-    const counterBlocks = renderIbanBlocks(account.iban);
-
-    const counterRead = el("button", {
-      type: "button",
-      class: "btn btn--big",
-      text: t("actions.read"),
-      onClick: () => {
-        const chunks =
-          readMode === "chars"
-            ? Array.from(account.iban)
-            : speechChunks(account.iban, t);
-        speaker.speak(chunks, speechLang());
-      },
-    });
-
-    const counterCopy = el("button", {
-      type: "button",
-      class: "btn btn--big",
-      text: t("actions.copyCompact"),
-      onClick: () => copyIbanWithFeedback(account.iban),
-    });
-
-    const closeBtn = el("button", {
-      type: "button",
-      class: "btn",
-      "aria-label": t("nav.close"),
-      text: t("nav.close"),
-      onClick: () => closeCounter(),
-    });
-
-    counterOverlay = el(
-      "div",
-      {
-        class: "analyzer analyzer--counter",
-        role: "dialog",
-        "aria-modal": "true",
-        "aria-label": t("analyzer.title"),
-      },
-      counterBlocks,
-      el("div", { class: "analyzer__controls" }, counterRead, counterCopy, closeBtn),
-    );
-
-    document.body.appendChild(counterOverlay);
-
-    // Il pulsante "Leggi" qui dentro segue lo stesso stato di disponibilita'.
-    if (!speaker.supported || !speaker.hasVoiceFor(speechLang())) {
-      counterRead.disabled = true;
-    }
-
-    // ESC chiude: aspettativa standard di una finestra modale.
-    document.addEventListener("keydown", onCounterKeydown);
-    requestWakeLock();
-    vibrate(10);
-
-    // Porta il focus dentro la finestra, per la navigazione da tastiera.
-    closeBtn.focus();
-  }
-
-  function onCounterKeydown(event) {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      closeCounter();
-    }
-  }
-
-  function closeCounter() {
-    if (!counterOverlay) return;
-    speaker.stop();
-    document.removeEventListener("keydown", onCounterKeydown);
-    remove(counterOverlay);
-    counterOverlay = null;
-    releaseWakeLock();
-    // Si ripristina lo stato visivo: l'inversione resta attiva solo se scelta.
-    setInverted(inverted);
-    if (typeof opts.onClose === "function") opts.onClose();
-  }
+  render(invertBtn, icon("invert"), el("span", { text: t("actions.invertColors") }));
 
   function destroy() {
     unsubscribe();
     speaker.stop();
-    closeCounter();
     // L'inversione colori e' una scelta di sessione: si ripristina.
     document.documentElement.dataset.invert = "false";
-    if (typeof opts.onClose === "function") opts.onClose();
   }
 
   /** Da chiamare quando cambia la lingua: ridisegna i testi interni. */
@@ -547,17 +424,12 @@ export function createAnalyzer(options) {
     readBtn.dataset.speaking = "false";
     render(
       invertBtn,
-      el("span", { "aria-hidden": "true", text: ICON.invert }),
+      icon("invert"),
       el("span", { text: t("actions.invertColors") }),
-    );
-    render(
-      counterBtn,
-      el("span", { "aria-hidden": "true", text: ICON.expand }),
-      el("span", { text: t("actions.openAnalyzer") }),
     );
     modeBlocksBtn.textContent = t("analyzer.readBlocks");
     modeCharsBtn.textContent = t("analyzer.readCharByChar");
   }
 
-  return { element, openCounter, closeCounter, destroy, refreshLanguage };
+  return { element, destroy, refreshLanguage };
 }

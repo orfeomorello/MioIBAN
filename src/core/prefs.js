@@ -17,7 +17,6 @@ const NS = "mioiban.pref.";
 export const PREF_DEFAULTS = Object.freeze({
   tema: "light", // 'light' | 'dark' | 'auto' (default chiaro: lo cambia l'utente)
   vista: "schede", // 'schede' | 'righe'
-  copyFormat: "spaced", // 'spaced' | 'compact'
   fontSize: "normal", // 'normal' | 'large' | 'xlarge'
   lang: null, // null = rileva dal browser
   onboardingCompleted: false,
@@ -26,7 +25,6 @@ export const PREF_DEFAULTS = Object.freeze({
 const VALID = Object.freeze({
   tema: ["light", "dark", "auto"],
   vista: ["schede", "righe"],
-  copyFormat: ["spaced", "compact"],
   fontSize: ["normal", "large", "xlarge"],
 });
 

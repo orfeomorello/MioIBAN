@@ -108,6 +108,9 @@ class TestNode {
 
 const documentStub = {
   createElement(tag) { return new TestNode(tag, this); },
+  // L'app crea le icone SVG con createElementNS: lo stub deve offrirlo,
+  // come il DOM vero (per i test basta un TestNode normale).
+  createElementNS(ns, tag) { return new TestNode(tag, this); },
   createTextNode(text) {
     const node = new TestNode("#text", this);
     node._textContent = String(text);

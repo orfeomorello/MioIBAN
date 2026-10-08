@@ -118,7 +118,7 @@ function interpolate(template, params) {
 /**
  * Traduce una chiave.
  *
- * @param {string} key    Percorso nel dizionario, es. "actions.copy".
+ * @param {string} key    Percorso nel dizionario, es. "actions.save".
  * @param {object} [params] Valori per i segnaposto. Se presente `count`,
  *                          viene scelta la forma plurale corretta
  *                          (chiave_one / chiave_other) via Intl.PluralRules.

@@ -5,7 +5,7 @@ rilasciato sotto licenza MIT (vedi [`LICENSE`](LICENSE)).
 
 Vincolo di progetto: **sono ammesse solo dipendenze con licenza MIT**, oppure con
 doppia licenza che includa MIT. Apache-2.0, ISC, BSD e GPL sono escluse.
-Vedi `MioIBAN-SPEC.md` §5.7 e §5.7.1.
+Le alternative valutate ed escluse sono elencate in fondo a questo file.
 
 ---
 
@@ -40,10 +40,20 @@ completi, `LICENSE.MIT` e `LICENSE.MPL-2.0`, e il campo SPDX dichiarato nel
 vedesse solo la pagina GitHub potrebbe trarre una conclusione sbagliata.
 
 **Perché è vendorizzata e non installata da npm.** L'app non ha build step e
-promette di funzionare offline servendo solo il proprio dominio
-(`MioIBAN-SPEC.md` §3 regola 5, §5.3): una dipendenza caricata da una CDN
-richiederebbe di allargare la CSP `default-src 'self'`. Il copatamento è fatto da
-`tools/vendor.mjs`, che scarica da URL **pinnati** e registra le impronte SHA-256.
+promette di funzionare offline servendo solo il proprio dominio: una dipendenza
+caricata da una CDN richiederebbe di allargare la CSP `default-src 'self'`. Il
+copatamento è fatto da `tools/vendor.mjs`, che scarica da URL **pinnati** e
+registra le impronte SHA-256.
+
+---
+
+## Icone
+
+Le icone dell'interfaccia sono **vettori SVG disegnati nel codice**
+(`icon()` in `src/ui/dom.js`), nello stile del set [Feather](https://feathericons.com)
+(licenza **MIT**): niente font di icone, niente risorse remote, seguono il colore
+del tema. Fanno eccezione l'icona dell'app (`icons/icon.svg`, disegnata per il
+progetto) e la geometria del simbolo "contrasto" per "Inverti colori".
 
 ---
 
@@ -57,8 +67,7 @@ moduli nativi di Node (`node:crypto`, `node:fs/promises`, `node:path`,
 
 ## Dipendenze valutate ed escluse
 
-Sono documentate in `MioIBAN-SPEC.md` §5.7.1, con la licenza e il motivo
-dell'esclusione. Le più rilevanti:
+Le più rilevanti:
 
 | Pacchetto | Licenza | Motivo |
 |---|---|---|
@@ -77,6 +86,6 @@ dell'esclusione. Le più rilevanti:
 
 1. Modificare la versione **pinnata** in `tools/vendor.mjs`.
 2. Eseguire `node tools/vendor.mjs` (le impronte cambiano: è atteso).
-3. Aggiornare la tabella in `MioIBAN-SPEC.md` §5.7 e questo file.
+3. Aggiornare la tabella qui sopra e questo file.
 4. Verificare che la licenza non sia cambiata: **se non è più MIT, la dipendenza
    non può entrare.**

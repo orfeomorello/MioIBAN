@@ -17,7 +17,7 @@
  * "Copia" in basso, cosi' un tocco accidentale non puo' cancellare nulla.
  */
 
-import { el, render, ICON } from "./dom.js";
+import { el, render, icon } from "./dom.js";
 import { t } from "../i18n/index.js";
 import { createAnalyzer } from "./analyzer.js";
 import { accountDisplayName } from "../core/model.js";
@@ -53,7 +53,7 @@ export function createDetailView(options) {
 
   const header = el("header", { class: "detail-header" });
   const details = el("div", { class: "kv-list" });
-  const actionBar = el("div", { class: "action-bar__inner action-bar__inner--wrap" });
+  const actionBar = el("div", { class: "action-bar__inner" });
 
   // Modifica ed elimina vivono nell'header (in alto a destra): app.js monta
   // `headerActions` nella barra superiore. Pulsanti icona con aria-label,
@@ -63,18 +63,20 @@ export function createDetailView(options) {
     class: "btn btn--ghost btn--icon",
     "aria-label": t("actions.edit"),
     title: t("actions.edit"),
-    text: ICON.edit,
     onClick: () => opts.onEdit(account),
-  });
+  },
+  icon("edit"),
+  );
 
   const deleteBtn = el("button", {
     type: "button",
     class: "btn btn--ghost btn--icon btn--danger",
     "aria-label": t("actions.delete"),
     title: t("actions.delete"),
-    text: ICON.trash,
     onClick: () => opts.confirmDelete(account, () => opts.onDeleteConfirmed(account)),
-  });
+  },
+  icon("trash"),
+  );
 
   const headerActions = el("div", { class: "app-header__actions" }, editBtn, deleteBtn);
 
@@ -82,10 +84,13 @@ export function createDetailView(options) {
   function paint() {
     render(
       header,
-      el("h1", { class: "view-title", text: name }),
+      // Il nome e' gia' nell'header dell'app (accanto alla freccia): qui
+      // resta solo per i lettori di schermo, nascosto alla vista per non
+      // ripeterlo due volte.
+      el("h1", { class: "visually-hidden", text: name }),
       account.banca ? el("p", { class: "detail-header__bank", text: account.banca }) : null,
       account.isFavorite
-        ? el("p", { class: "detail-header__fav", text: `${ICON.star} ${t("fields.favorite")}` })
+        ? el("p", { class: "detail-header__fav" }, icon("star"), el("span", { text: t("fields.favorite") }))
         : null,
     );
 
@@ -111,6 +116,8 @@ export function createDetailView(options) {
     deleteBtn.setAttribute("aria-label", t("actions.delete"));
     deleteBtn.setAttribute("title", t("actions.delete"));
 
+    // Tre azioni su una sola riga: una sola copia (compatta, quella che si
+    // incolla nel bonifico), stampa e condivisione.
     render(
       actionBar,
       el(
@@ -118,30 +125,21 @@ export function createDetailView(options) {
         {
           type: "button",
           class: "btn btn--primary btn--big",
-          onClick: () => opts.onCopy(account, "spaced"),
-        },
-        el("span", { "aria-hidden": "true", text: ICON.copy }),
-        el("span", { text: t("actions.copy") }),
-      ),
-      el(
-        "button",
-        {
-          type: "button",
-          class: "btn btn--big",
           onClick: () => opts.onCopy(account, "compact"),
         },
+        icon("copy"),
         el("span", { text: t("actions.copyCompact") }),
       ),
       el(
         "button",
         { type: "button", class: "btn btn--big", onClick: () => opts.onPrint(account) },
-        el("span", { "aria-hidden": "true", text: ICON.print }),
+        icon("print"),
         el("span", { text: t("actions.print") }),
       ),
       el(
         "button",
         { type: "button", class: "btn btn--big", onClick: () => opts.onShare(account) },
-        el("span", { "aria-hidden": "true", text: ICON.share }),
+        icon("share"),
         el("span", { text: t("actions.share") }),
       ),
     );
