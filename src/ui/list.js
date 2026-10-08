@@ -188,7 +188,6 @@ export function createListView(options) {
         scheduleUpdate();
       },
     },
-    icon("star"),
     el("span", { text: t("accounts.favoritesOnly") }),
     );
     chipsContainer.appendChild(favChip);

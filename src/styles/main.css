@@ -443,7 +443,6 @@ body {
   flex: none;
 }
 
-.chip .icon,
 .detail-header__fav .icon {
   margin-inline-end: var(--space-2);
 }
