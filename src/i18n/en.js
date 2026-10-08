@@ -171,6 +171,14 @@ export default {
     backupHint: "A backup is the only way not to lose your data. Nobody can recover it for you.",
     exportNow: "Export backup",
     importNow: "Import backup",
+    reset: "Reset",
+    resetHint:
+      "Delete accounts, groups and settings to start over as if freshly installed. This cannot be undone: export a backup first if you want to keep your data.",
+    resetNow: "Reset the app",
+    resetTitle: "Reset the app",
+    resetBody:
+      "Delete all accounts, groups and settings? The app will be as freshly installed, and this cannot be undone.",
+    resetConfirm: "Delete everything",
     about: "About",
     version: "Version {version}",
     aboutPrivacyHint:

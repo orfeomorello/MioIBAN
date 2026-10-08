@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MioIBAN — Impostazioni (MioIBAN-SPEC.md §7)
  *
  * Contiene anche il presidio piu' importante per l'utente: il BACKUP.
@@ -8,7 +8,8 @@
 
 import { el, render, icon } from "./dom.js";
 import { t, LANGUAGES, setLanguage, currentLanguage } from "../i18n/index.js";
-import { getPref, setPref } from "../core/prefs.js";
+import { getPref, setPref, clearAllPrefs } from "../core/prefs.js";
+import { clearAll as clearAllRecords } from "../core/storage.js";
 import { applyTheme, applyTextSize, setTheme, setTextSize } from "./theme.js";
 import { showToast } from "./actions.js";
 import { openSheet, confirmSheet } from "./sheet.js";
@@ -214,6 +215,46 @@ export function createSettingsView(options) {
     el("span", { text: t("settings.importNow") }),
   );
 
+  /* --- Reimposta: cancella DAVVERO tutto e ricomincia da zero ---
+     Conti e gruppi (IndexedDB), preferenze (localStorage), cache e Service
+     Worker: dopo il reload l'app si ripresenta come appena installata
+     (di nuovo l'onboarding). I cookie non servono: l'app non ne usa. */
+  const resetBtn = el("button", {
+    type: "button",
+    class: "btn btn--big btn--danger",
+    text: t("settings.resetNow"),
+    onClick: () =>
+      confirmSheet({
+        title: t("settings.resetTitle"),
+        body: t("settings.resetBody"),
+        confirmLabel: t("settings.resetConfirm"),
+        cancelLabel: t("actions.cancel"),
+        destructive: true,
+        onConfirm: async () => {
+          try {
+            await clearAllRecords();
+            clearAllPrefs();
+            if (typeof caches !== "undefined" && caches.keys) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map((key) => caches.delete(key)));
+            }
+            if (
+              typeof navigator !== "undefined" &&
+              navigator.serviceWorker &&
+              navigator.serviceWorker.getRegistrations
+            ) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(registrations.map((reg) => reg.unregister()));
+            }
+          } catch {
+            showToast(t("errors.unexpected"), { duration: 4000 });
+            return;
+          }
+          window.location.reload();
+        },
+      }),
+  });
+
   async function onImportFileChosen(event) {
     const file = event.target.files && event.target.files[0];
     // Si azzera subito: se l'utente sceglie due volte lo stesso file,
@@ -304,6 +345,10 @@ export function createSettingsView(options) {
     el("p", { class: "hint", text: t("settings.backupHint") }),
     el("div", { class: "settings__actions" }, exportBtn, importBtn, importInput),
     exportStatus,
+
+    section("settings.reset"),
+    el("p", { class: "hint", text: t("settings.resetHint") }),
+    resetBtn,
 
     section("settings.about"),
     el("p", { class: "kv" },

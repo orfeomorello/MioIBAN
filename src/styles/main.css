@@ -479,6 +479,8 @@ body {
   border-radius: var(--radius-lg);
   background: var(--surface);
   cursor: pointer;
+  /* Riferimento per la misura dell'IBAN: resta su una riga sola. */
+  container-type: inline-size;
 }
 
 .account-card__alias {
@@ -495,6 +497,10 @@ body {
   margin-block-start: var(--space-2);
   font-family: var(--font-mono);
   font-size: var(--fs-lg);
+  /* Segue la grandezza testo scelta, ma con un tetto legato alla larghezza
+     della scheda: 33 caratteri spaziati devono stare su una sola riga anche
+     su un telefono stretto. La prima riga e' per i browser vecchi. */
+  font-size: min(var(--fs-lg), 4cqi);
   letter-spacing: 0.06em;
   font-variant-numeric: slashed-zero;
   font-feature-settings: "zero" 1;
@@ -513,6 +519,7 @@ body {
   background: transparent;
   text-align: start;
   cursor: pointer;
+  container-type: inline-size;
 }
 
 /* --- Chip dei filtri --- */
@@ -871,6 +878,8 @@ body {
 .account-row__iban {
   font-family: var(--font-mono);
   font-size: var(--fs-sm);
+  /* Stesso tetto della scheda, per gli IBAN piu' lunghi (fino a 34 caratteri). */
+  font-size: min(var(--fs-sm), 4cqi);
   color: var(--text-muted);
   font-variant-numeric: slashed-zero;
   font-feature-settings: "zero" 1;

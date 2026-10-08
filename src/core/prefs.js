@@ -113,7 +113,7 @@ export function replaceAllPrefs(prefs) {
   return result;
 }
 
-/** Rimuove tutte le preferenze MioIBAN. Usato solo nei test. */
+/** Rimuove tutte le preferenze MioIBAN. Usato dal reset e nei test. */
 export function clearAllPrefs() {
   if (!isStorageAvailable()) return;
   for (const key of Object.keys(PREF_DEFAULTS)) {

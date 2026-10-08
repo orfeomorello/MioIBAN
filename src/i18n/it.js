@@ -176,6 +176,14 @@ export default {
     backupHint: "Il backup è l'unico modo per non perdere i dati. Nessuno può recuperarli al posto tuo.",
     exportNow: "Esporta backup",
     importNow: "Importa backup",
+    reset: "Reimposta",
+    resetHint:
+      "Elimina conti, gruppi e impostazioni per ricominciare come fosse appena installata. L'operazione non si può annullare: esporta prima un backup se vuoi conservare i dati.",
+    resetNow: "Reimposta l'app",
+    resetTitle: "Reimposta l'app",
+    resetBody:
+      "Vuoi eliminare tutti i conti, i gruppi e le impostazioni? L'app tornerà come appena installata e l'operazione non si può annullare.",
+    resetConfirm: "Elimina tutto",
     about: "Informazioni",
     version: "Versione {version}",
     aboutPrivacyHint:

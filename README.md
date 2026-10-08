@@ -16,7 +16,7 @@ Nessun server, nessun account, nessuna sincronizzazione: tutto vive nel browser.
 - **Salvataggio e ricerca**: conti con nome breve, preferiti, gruppi e ricerca istantanea, con controllo dei duplicati.
 - **Controllo errori**: validazione del formato e, per gli IBAN italiani, anche del carattere di controllo nazionale (CIN); incolla intelligente da messaggi (WhatsApp, email…).
 - **Copia in un tocco**, condivisione e **stampa** (il PDF con "Salva come PDF" del browser).
-- **Backup** con esportazione/importazione in JSON; funziona **offline** dopo il primo caricamento.
+- **Backup** con esportazione/importazione in JSON e reimpostazione totale; funziona **offline** dopo il primo caricamento.
 - **Italiano e inglese**, tema chiaro/scuro, testo ingrandibile. PWA installabile, nessun passaggio di build.
 
 ---
