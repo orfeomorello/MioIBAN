@@ -622,6 +622,16 @@ body {
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s ease;
+}
+
+/* Gruppo in lettura: sfondo pieno, gli zeri restano rossi e in grassetto. */
+.iban-group.is-reading {
+  background: var(--accent-soft, rgba(29, 78, 216, 0.14));
+  outline: 2px solid var(--accent, currentColor);
+  outline-offset: 2px;
 }
 
 .iban-group__chars {

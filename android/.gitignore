@@ -1,0 +1,27 @@
+# Build e output di Gradle (in ogni sottocartella, es. app/build)
+build/
+**/build/
+.gradle/
+.kotlin/
+
+# Dati locali: percorso dell'SDK e configurazione della macchina
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Artefatti di compilazione e APK prodotti in locale
+*.apk
+*.aab
+*.ap_
+*.dex
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Chiavi di firma: non vanno mai nel repository
+*.jks
+*.keystore
+keystore.properties

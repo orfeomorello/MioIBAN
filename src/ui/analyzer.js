@@ -130,7 +130,7 @@ export function createSpeaker() {
    * @param {string[]} chunks Un frammento per blocco, gia' pronto.
    * @param {string} [lang]
    */
-  function speak(chunks, lang) {
+  function speak(chunks, lang, onChunkStart) {
     if (!supported) return false;
     const wasSpeaking = speaking;
     stop();
@@ -158,10 +158,15 @@ export function createSpeaker() {
         // Sempre entrambi: il browser potrebbe ignorare la voce scelta.
         utterance.lang = useLang;
         if (voice) utterance.voice = voice;
-        // Piu' lento del parlato normale: si sta dettando un codice.
-        utterance.rate = 0.85;
+        // Lento: si sta dettando un codice, e chi ascolta deve avere tempo di trascrivere.
+        utterance.rate = 0.6;
         utterance.pitch = 1;
         utterance.volume = 1;
+
+        // Il primo elemento e' il silenzio di riscaldamento: il gruppo 0 e' index 1.
+        if (typeof onChunkStart === "function" && index > 0) {
+          utterance.onstart = () => onChunkStart(index - 1);
+        }
 
         if (index === queue.length - 1) {
           utterance.onend = () => {
@@ -242,11 +247,6 @@ export function renderIbanBlocks(electronic) {
           { class: "iban-group__chars" },
           block.chars.map((c) => el("span", { class: charClass(c), text: c.ch })),
         ),
-        el(
-          "div",
-          { class: "iban-group__count" },
-          block.chars.map((c) => el("span", { text: String(c.seq) })),
-        ),
       ),
     ),
   );
@@ -273,45 +273,18 @@ export function createAnalyzer(options) {
   const account = opts.account;
   const speaker = createSpeaker();
 
-  let readMode = "blocks"; // 'blocks' | 'chars'
   let inverted = false;
 
   /* --- Controllo di lettura (segmentato) --- */
 
-  const modeBlocksBtn = el("button", {
-    type: "button",
-    class: "chip",
-    "aria-pressed": "true",
-    text: t("analyzer.readBlocks"),
-    onClick: () => setReadMode("blocks"),
-  });
-
-  const modeCharsBtn = el("button", {
-    type: "button",
-    class: "chip",
-    "aria-pressed": "false",
-    text: t("analyzer.readCharByChar"),
-    onClick: () => setReadMode("chars"),
-  });
-
-  const modeGroup = el(
-    "div",
-    { class: "chips", role: "group" },
-    modeBlocksBtn,
-    modeCharsBtn,
-  );
-
-  function setReadMode(mode) {
-    readMode = mode;
-    modeBlocksBtn.setAttribute("aria-pressed", String(mode === "blocks"));
-    modeCharsBtn.setAttribute("aria-pressed", String(mode === "chars"));
-  }
-
   const readBtn = el("button", {
     type: "button",
-    class: "btn btn--big",
+    class: "btn btn--big analyzer__listen",
     onClick: toggleRead,
   });
+
+  /** Gruppi illuminati durante la lettura, per indice di blocco. */
+  let groupEls = [];
 
   function toggleRead() {
     if (!speaker.supported) return;
@@ -319,13 +292,13 @@ export function createAnalyzer(options) {
       speaker.stop();
       return;
     }
-    const chunks =
-      readMode === "chars"
-        ? // Un carattere per volta: le cifre pronunciate singolarmente.
-          Array.from(account.iban)
-        : // Un blocco per volta, con lo zero detto "zero" (§8.4).
-          speechChunks(account.iban, t);
-    speaker.speak(chunks, speechLang());
+    // Un blocco per volta, con lo zero detto "zero" (§8.4).
+    speaker.speak(speechChunks(account.iban, t), speechLang(), highlightGroup);
+  }
+
+  /** Illumina il gruppo in lettura; gli zeri restano riconoscibili. */
+  function highlightGroup(index) {
+    groupEls.forEach((g, i) => g.classList.toggle("is-reading", i === index));
   }
 
   /**
@@ -351,7 +324,7 @@ export function createAnalyzer(options) {
     onClick: () => setInverted(!inverted),
   });
 
-  const hint = el("p", { class: "hint", text: t("analyzer.zerosHighlighted") });
+  const hint = el("p", { class: "hint analyzer__hint", text: t("analyzer.zerosHighlighted") });
   const voiceNotice = el("p", { class: "status status--warn", hidden: true });
 
   function setInverted(value) {
@@ -363,15 +336,15 @@ export function createAnalyzer(options) {
   /* --- Contenuto --- */
 
   const blocks = renderIbanBlocks(account.iban);
+  groupEls = Array.from(blocks.querySelectorAll(".iban-group"));
 
   const element = el(
     "section",
     { class: "analyzer" },
-    el("h2", { class: "section-title", text: t("analyzer.title") }),
-    blocks,
+    el("div", { class: "analyzer__controls" }, readBtn),
     hint,
-    modeGroup,
-    el("div", { class: "analyzer__controls" }, readBtn, invertBtn),
+    blocks,
+    el("div", { class: "analyzer__controls" }, invertBtn),
     voiceNotice,
   );
 
@@ -383,15 +356,15 @@ export function createAnalyzer(options) {
     render(
       readBtn,
       icon(speaking ? "stop" : "play"),
-      el("span", { text: speaking ? t("actions.stopReading") : t("actions.read") }),
+      el("span", { text: speaking ? t("actions.stopReading") : t("analyzer.listen") }),
     );
+    // A fine lettura (o allo stop) si spegne l'illuminazione del gruppo.
+    if (!speaking) highlightGroup(-1);
 
     // Il pulsante si disabilita solo quando sappiamo per certo che la voce
     // non c'e' (elenco voci caricato e nessuna corrispondenza).
     const usable = state.supported && state.hasVoice;
     readBtn.disabled = !usable;
-    modeBlocksBtn.disabled = !usable;
-    modeCharsBtn.disabled = !usable;
 
     if (!state.supported) {
       voiceNotice.hidden = false;
@@ -420,15 +393,13 @@ export function createAnalyzer(options) {
     hint.textContent = t("analyzer.zerosHighlighted");
     voiceNotice.textContent = voiceNotice.hidden ? "" : t("analyzer.voiceUnavailable");
     clear(readBtn);
-    render(readBtn, el("span", { text: t("actions.read") }));
+    render(readBtn, icon("play"), el("span", { text: t("analyzer.listen") }));
     readBtn.dataset.speaking = "false";
     render(
       invertBtn,
       icon("invert"),
       el("span", { text: t("actions.invertColors") }),
     );
-    modeBlocksBtn.textContent = t("analyzer.readBlocks");
-    modeCharsBtn.textContent = t("analyzer.readCharByChar");
   }
 
   return { element, destroy, refreshLanguage };

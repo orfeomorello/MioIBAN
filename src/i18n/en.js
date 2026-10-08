@@ -28,6 +28,7 @@ export default {
     edit: "Edit",
     confirm: "Confirm",
     copyCompact: "Copy",
+    sportello: "Counter mode",
     copied: "Copied!",
     print: "Print",
     printAll: "Print all",
@@ -122,11 +123,9 @@ export default {
   },
 
   analyzer: {
-    title: "IBAN analysis",
-    countLabel: "Count",
+    title: "Counter mode",
     zerosHighlighted: "Zeros are highlighted",
-    readBlocks: "Read in blocks",
-    readCharByChar: "Read character by character",
+    listen: "Listen to the IBAN",
     voiceUnavailable: "Read aloud is not available on this device.",
     chars_one: "{count} character",
     chars_other: "{count} characters",

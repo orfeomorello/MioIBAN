@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Catalogo italiano (lingua di riferimento). Le chiavi devono esistere anche in values-en. -->
+<resources>
+    <string name="app_name">MioIBAN</string>
+    <string name="tagline">I tuoi IBAN, chiari e pronti da copiare.</string>
+    <string name="privacy_line">Non escono mai dal tuo dispositivo.</string>
+
+    <!-- Azioni comuni -->
+    <string name="action_add">Aggiungi</string>
+    <string name="action_edit">Modifica</string>
+    <string name="action_delete">Elimina</string>
+    <string name="action_save">Salva</string>
+    <string name="action_cancel">Annulla</string>
+    <string name="action_copy">Copia</string>
+    <string name="action_copied">Copiato</string>
+    <string name="action_back">Indietro</string>
+    <string name="action_close">Chiudi</string>
+    <string name="action_share">Condividi</string>
+    <string name="action_print">Stampa</string>
+    <string name="action_print_all">Stampa tutti</string>
+    <string name="action_clear">Cancella</string>
+    <string name="action_read">Leggi</string>
+    <string name="action_stop">Ferma</string>
+    <string name="action_invert">Inverti colori</string>
+    <string name="action_settings">Impostazioni</string>
+    <string name="action_sportello">Sportello</string>
+    <string name="action_open_existing">Apri quello esistente</string>
+    <string name="action_confirm">Conferma</string>
+    <string name="favorite_toggle">Preferito</string>
+
+    <!-- Onboarding -->
+    <string name="onb_welcome">Benvenuto in MioIBAN</string>
+    <string name="onb_language">Scegli la lingua</string>
+    <string name="onb_theme">Scegli il tema</string>
+    <string name="onb_text_size">Scegli la grandezza del testo</string>
+    <string name="onb_disclaimer_title">Prima di iniziare</string>
+    <string name="onb_accept">Ho capito</string>
+    <string name="disclaimer">MioIBAN è un archivio locale fornito «così com\'è», senza alcuna garanzia.\n\n• Non invia pagamenti, non gestisce scadenze e non manda notifiche.\n• Non sincronizza nulla e non ha server: i dati restano SOLO su questo dispositivo.\n• Non è cifrato: chi usa questo dispositivo può vedere gli IBAN salvati.\n• Il backup è responsabilità esclusiva dell\'utente. Se perdi il dispositivo o cancelli i dati senza aver esportato un backup, i dati sono persi e non sono recuperabili.\n• MioIBAN verifica la correttezza formale di un IBAN (lunghezza e cifre di controllo), ma non può garantire che corrisponda al conto reale. Verifica sempre con la tua banca prima di un pagamento.</string>
+
+    <!-- Tema e testo -->
+    <string name="theme_light">Chiaro</string>
+    <string name="theme_dark">Scuro</string>
+    <string name="theme_auto">Automatico</string>
+    <string name="text_normal">Normale</string>
+    <string name="text_large">Grande</string>
+    <string name="text_xlarge">Molto grande</string>
+
+    <!-- Elenco -->
+    <string name="list_title">I tuoi conti</string>
+    <string name="list_search_hint">Cerca per nome, banca o IBAN</string>
+    <string name="list_favorites">Preferiti</string>
+    <string name="list_all_groups">Tutti i gruppi</string>
+    <string name="list_view_cards">Schede</string>
+    <string name="list_view_rows">Righe</string>
+    <string name="list_empty_title">Non hai ancora salvato nessun conto.</string>
+    <string name="list_empty_hint">Tocca «Più» in basso per salvarne uno.</string>
+    <string name="list_no_results">Nessun conto trovato.</string>
+
+    <!-- Dettaglio -->
+    <string name="detail_holder">Intestatario</string>
+    <string name="detail_bic">BIC</string>
+    <string name="detail_note">Note</string>
+    <string name="detail_copy_compact">Copia IBAN</string>
+    <string name="detail_copied_toast">IBAN copiato negli appunti.</string>
+    <string name="detail_delete_title">Eliminare questo conto?</string>
+    <string name="detail_delete_body">Vuoi eliminare «%1$s»? L\'operazione non si può annullare.</string>
+    <string name="detail_delete_body_noalias">Vuoi eliminare questo conto? L\'operazione non si può annullare.</string>
+    <string name="detail_favorite">Preferito</string>
+
+    <!-- Form -->
+    <string name="form_new_title">Nuovo conto</string>
+    <string name="form_edit_title">Modifica conto</string>
+    <string name="form_iban">IBAN</string>
+    <string name="form_alias">Nome breve</string>
+    <string name="form_holder">Intestatario</string>
+    <string name="form_bank">Banca</string>
+    <string name="form_bic">BIC (opzionale)</string>
+    <string name="form_note">Note</string>
+    <string name="form_group">Gruppo</string>
+    <string name="form_none">Nessuno</string>
+    <string name="form_favorite">Preferito</string>
+    <string name="form_iban_placeholder">IT60 X054 2811 1010 0000 0123 456</string>
+    <string name="form_paste_title">Incolla un messaggio</string>
+    <string name="form_paste_hint">Incolla il testo ricevuto (WhatsApp, email, PDF): cerco gli IBAN validi senza salvare nulla automaticamente.</string>
+    <string name="form_paste_label">Testo del messaggio</string>
+    <string name="form_paste_too_long">Il testo supera il limite di sicurezza (20.000 caratteri).</string>
+    <string name="form_paste_none">Non ho trovato IBAN validi nel testo. Puoi inserirne uno nel campo qui sopra.</string>
+    <string name="form_paste_single">Ho trovato un IBAN formalmente valido e l\'ho inserito nel campo. Controllalo prima di salvare.</string>
+    <string name="form_paste_choose">Scegli l\'IBAN da usare:</string>
+    <string name="form_paste_use">Usa</string>
+    <string name="form_duplicate_alias">Hai già questo IBAN salvato come «%1$s».</string>
+    <string name="form_duplicate_noalias">Hai già questo IBAN salvato.</string>
+    <string name="form_iban_ok">IBAN formalmente valido.</string>
+    <string name="form_iban_ok_cin">IBAN valido: lunghezza, cifre di controllo internazionali e carattere di controllo italiano sono corretti.</string>
+    <string name="err_empty">Inserisci un IBAN.</string>
+    <string name="err_unknown_country">Questo paese non aderisce al registro IBAN.</string>
+    <string name="err_wrong_length">Sembra che manchi o avanzi qualche carattere.</string>
+    <string name="err_wrong_format">Controlla le lettere e i numeri: qualcosa non torna.</string>
+    <string name="err_checksum">Questo IBAN non è valido. Controlla di non aver saltato o invertito un carattere.</string>
+    <string name="err_cin">Il carattere di controllo italiano non corrisponde: quasi certamente una cifra è stata copiata male.</string>
+    <string name="err_bic">Il BIC deve avere 8 o 11 caratteri.</string>
+
+    <!-- Sportello -->
+    <string name="sportello_title">Modalità Sportello</string>
+    <string name="sportello_hint">Gli zeri sono evidenziati in rosso.</string>
+    <string name="sportello_read_blocks">Ascolta l\'IBAN</string>
+    <string name="sportello_voice_unavailable">La lettura ad alta voce non è disponibile su questo dispositivo.</string>
+    <string name="tts_zero">zero</string>
+    <string name="a11y_open_account">Apri il conto %1$s</string>
+
+    <!-- Impostazioni -->
+    <string name="settings_appearance">Aspetto</string>
+    <string name="settings_text">Testo</string>
+    <string name="settings_language">Lingua</string>
+    <string name="settings_lang_system">Sistema</string>
+    <string name="settings_groups">Gruppi</string>
+    <string name="settings_groups_hint">I gruppi servono a filtrare i conti. Sono facoltativi.</string>
+    <string name="settings_group_placeholder">Es. Famiglia</string>
+    <string name="settings_group_add">Aggiungi gruppo</string>
+    <string name="settings_group_empty">Nessun gruppo.</string>
+    <string name="settings_group_delete_body">Eliminare il gruppo «%1$s»? I conti resteranno, ma senza gruppo.</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_hint">Il backup è l\'unico modo per non perdere i dati. Nessuno può recuperarli al posto tuo.</string>
+    <string name="settings_export">Esporta backup</string>
+    <string name="settings_import">Importa backup</string>
+    <string name="settings_export_done">Backup salvato. Conservalo in un luogo sicuro.</string>
+    <string name="settings_import_title">Importa un backup</string>
+    <string name="settings_import_summary">Stai per importare %1$d conti al posto dei tuoi %2$d. Confermi?</string>
+    <string name="settings_import_confirm">Sostituisci i dati attuali</string>
+    <string name="settings_import_done">Backup importato correttamente.</string>
+    <string name="settings_import_skipped">%1$d conti saltati perché l\'IBAN non è valido o è già presente.</string>
+    <string name="settings_reset">Reimposta</string>
+    <string name="settings_reset_hint">Elimina conti, gruppi e impostazioni per ricominciare da zero. Esporta prima un backup se vuoi conservare i dati.</string>
+    <string name="settings_reset_btn">Reimposta l\'app</string>
+    <string name="settings_reset_body">Vuoi eliminare tutti i conti, i gruppi e le impostazioni? L\'operazione non si può annullare.</string>
+    <string name="settings_reset_confirm">Elimina tutto</string>
+    <string name="settings_about">Informazioni</string>
+    <string name="settings_version">Versione %1$s</string>
+    <string name="settings_privacy_hint">MioIBAN non usa server né account: i tuoi IBAN restano solo su questo dispositivo.</string>
+    <string name="settings_disclaimer_btn">Dati personali e privacy</string>
+
+    <!-- Backup -->
+    <string name="backup_invalid">Questo file non è un backup di MioIBAN valido.</string>
+    <string name="backup_newer">Questo backup è stato creato da una versione più recente di MioIBAN.</string>
+    <string name="backup_incomplete">Il backup è incompleto o contiene IBAN non validi.</string>
+    <string name="backup_empty">Il backup non contiene nessun conto.</string>
+
+    <!-- Stampa e condivisione -->
+    <string name="print_title">DATI PER BONIFICO</string>
+    <string name="print_holder">Intestatario</string>
+    <string name="print_bank">Banca</string>
+    <string name="print_bic">BIC</string>
+    <string name="print_iban">IBAN</string>
+    <string name="print_reason">Causale</string>
+    <string name="print_footer">Documento generato localmente da MioIBAN il %1$s. Verificare sempre i dati prima dell\'uso.</string>
+    <string name="share_title">Condividi IBAN</string>
+    <string name="share_text">IBAN di %1$s: %2$s</string>
+    <string name="share_text_noalias">IBAN: %1$s</string>
+
+    <!-- Errori -->
+    <string name="errors_unexpected">Si è verificato un errore imprevisto.</string>
+    <string name="errors_clipboard">Non è stato possibile copiare. Seleziona l\'IBAN e copialo a mano.</string>
+</resources>

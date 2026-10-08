@@ -12,7 +12,7 @@ Nessun server, nessun account, nessuna sincronizzazione: tutto vive nel browser.
 
 ## Cosa fa
 
-- **Modalità Sportello**: IBAN a tutto schermo, blocchi da 4, zeri evidenziati, conteggio e lettura vocale.
+- **Modalità Sportello**: blocchi da 4, zeri evidenziati, gruppo in lettura illuminato e lettura vocale lenta con pausa fra i gruppi.
 - **Salvataggio e ricerca**: conti con nome breve, preferiti, gruppi e ricerca istantanea, con controllo dei duplicati.
 - **Controllo errori**: validazione del formato e, per gli IBAN italiani, anche del carattere di controllo nazionale (CIN); incolla intelligente da messaggi (WhatsApp, email…).
 - **Copia in un tocco**, condivisione e **stampa** (il PDF con "Salva come PDF" del browser).
@@ -45,6 +45,84 @@ La libreria è già inclusa in `vendor/`: non serve installare nulla.
 
 ---
 
+## App Android
+
+Accanto alla PWA c'è una app Android nativa, in `android/`, scritta in Kotlin
+con Jetpack Compose e Material 3. Ha le stesse funzioni e lo stesso formato di
+backup (`schemaVersion: 2`), quindi un file esportato da una può essere
+importato nell'altra.
+
+Non ha permessi di rete e non contiene analytics: come la PWA, tutto resta sul dispositivo.
+
+### Requisiti per compilarla
+
+- **JDK 21** (il progetto usa un toolchain Java 21).
+- **Android SDK** con la piattaforma **android-36** (`compileSdk 36`).
+- Connessione internet alla prima compilazione, per scaricare Gradle e le dipendenze.
+
+Il wrapper di Gradle (`gradlew` / `gradlew.bat`) è incluso: non serve installare Gradle.
+
+### Configurare l'SDK
+
+Crea il file `android/local.properties` con il percorso del tuo SDK:
+
+```properties
+sdk.dir=C\:\\Users\\tuonome\\AppData\\Local\\Android\\Sdk
+```
+
+Su macOS o Linux: `sdk.dir=/home/tuonome/Android/Sdk`. Il file non va versionato:
+è già escluso dal `.gitignore` di `android/`.
+
+### Compilare e provare
+
+Dalla cartella `android/`:
+
+```bash
+./gradlew :app:testDebugUnitTest    # test unitari (macOS/Linux)
+./gradlew :app:assembleDebug        # APK di debug
+./gradlew :app:assembleRelease      # APK di release
+```
+
+Su Windows usa `gradlew.bat` al posto di `./gradlew`.
+
+L'APK di debug si trova in `android/app/build/outputs/apk/debug/app-debug.apk`.
+Copialo sul telefono e aprilo dal gestore file, consentendo l'installazione da
+questa origine.
+
+### Firma della release
+
+La build `release` è firmata con la **chiave di debug**: si installa, ma **non è
+adatta alla pubblicazione** su uno store. Per distribuire una versione vera serve
+una chiave di firma propria, da conservare con cura: va configurata in
+`app/build.gradle.kts`, nel blocco `signingConfigs`, e non va committata.
+
+### Versione
+
+La versione è in `android/app/build.gradle.kts`:
+
+- `versionCode` è un intero che deve **crescere a ogni installazione**, altrimenti
+  Android non aggiorna l'app sopra la precedente.
+- `versionName` è il testo mostrato all'utente (es. `1.0.1`).
+
+### Struttura
+
+```
+android/
+  app/src/main/java/it/mioiban/app/
+    core/        Validazione IBAN, CIN, estrazione dal testo, backup (puro Kotlin)
+    data/        Room (SQLite), preferenze, repository
+    ui/          Schermate Compose, navigazione, tema Material 3
+    ui/print/    Stampa e PDF
+  app/src/test/  Test unitari (IbanTest, BackupTest)
+```
+
+Il file `core/IbanRegistry.kt` è **generato**: non modificarlo a mano. Si rigenera
+con `tools/gen-android-registry.mjs` (nella radice del progetto) quando cambia la
+libreria IBAN.
+
+Il file `FUNZIONALITA.md` mette in corrispondenza ogni funzione dell'app Android
+con il file corrispondente della PWA.
+
 ## Test
 
 - `npm test` — test automatici in Node, nessuna dipendenza da installare.
@@ -71,6 +149,7 @@ La libreria è già inclusa in `vendor/`: non serve installare nulla.
 
 ```
 package.json          Tipo ES module e comandi di test Node nativi
+android/              App Android nativa (Kotlin + Compose), vedi sezione dedicata
 LICENSE                MIT
 THIRD-PARTY.md         Dipendenze e licenze
 README.md              Questo file
@@ -110,6 +189,7 @@ src/
 vendor/                Dipendenze copiate (generate da tools/vendor.mjs)
 tools/
   vendor.mjs           Copiatura riproducibile con verifica SHA-256
+  gen-android-registry.mjs  Genera il registro IBAN dell'app Android
 test/
   index.html           Test d'integrazione eseguibili nel browser
   cin-vectors.js       Vettori di test del CIN italiano

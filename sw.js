@@ -15,7 +15,7 @@
    cercano con `ignoreSearch: true`.
    ========================================================================== */
 
-const CACHE_NAME = "mioiban-v3";
+const CACHE_NAME = "mioiban-v4";
 
 /**
  * File da tenere in cache. Elenco esplicito: niente glob, niente magia.

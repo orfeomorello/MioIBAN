@@ -32,6 +32,7 @@ export default {
     edit: "Modifica",
     confirm: "Conferma",
     copyCompact: "Copia",
+    sportello: "Modalità sportello",
     copied: "Copiato!",
     print: "Stampa",
     printAll: "Stampa tutti",
@@ -126,11 +127,9 @@ export default {
   },
 
   analyzer: {
-    title: "Analisi IBAN",
-    countLabel: "Conta",
+    title: "Modalità sportello",
     zerosHighlighted: "Gli zeri sono evidenziati",
-    readBlocks: "Leggi a blocchi",
-    readCharByChar: "Leggi carattere per carattere",
+    listen: "Ascolta l'IBAN",
     voiceUnavailable: "La lettura ad alta voce non è disponibile su questo dispositivo.",
     chars_one: "{count} carattere",
     chars_other: "{count} caratteri",

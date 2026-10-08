@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="accounts_count">
+        <item quantity="one">%d conto</item>
+        <item quantity="other">%d conti</item>
+    </plurals>
+    <plurals name="paste_found">
+        <item quantity="one">Ho trovato %d IBAN formalmente valido. Scegli quello da archiviare:</item>
+        <item quantity="other">Ho trovato %d IBAN formalmente validi. Scegli quelli da archiviare:</item>
+    </plurals>
+    <plurals name="chars_count">
+        <item quantity="one">%d carattere</item>
+        <item quantity="other">%d caratteri</item>
+    </plurals>
+</resources>
