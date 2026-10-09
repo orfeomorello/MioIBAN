@@ -21,7 +21,7 @@ data class AccountDraft(
     val bic: String = "",
     val alias: String = "",
     val note: String = "",
-    val groupId: String? = null,
+    val causale: String = "",
     val isFavorite: Boolean = false,
 )
 
@@ -32,7 +32,6 @@ data class AccountDraft(
 class Repository(private val db: AppDatabase) {
 
     val accounts: Flow<List<Account>> = db.accounts().observeAll()
-    val groups: Flow<List<Group>> = db.groups().observeAll()
 
     suspend fun get(id: String): Account? = db.accounts().getById(id)
 
@@ -53,12 +52,12 @@ class Repository(private val db: AppDatabase) {
             bic = Iban.normalize(draft.bic).take(11),
             alias = cleanText(draft.alias, 60),
             note = cleanText(draft.note, 500),
-            groupId = draft.groupId,
+            causale = cleanText(draft.causale, 200),
             isFavorite = draft.isFavorite,
+            sortOrder = previous?.sortOrder ?: 0,
             createdAt = previous?.createdAt ?: now,
             lastUsedAt = previous?.lastUsedAt ?: now,
         )
-        // Con upsert, se il conto esiste già si sostituisce; altrimenti si inserisce.
         if (previous != null) {
             db.accounts().delete(previous.id)
         }
@@ -75,31 +74,22 @@ class Repository(private val db: AppDatabase) {
         db.accounts().insert(account.copy(isFavorite = favorite))
     }
 
-    suspend fun addGroup(name: String): Group? {
-        val clean = cleanText(name, 40)
-        if (clean.isEmpty()) return null
-        val group = Group(id = UUID.randomUUID().toString(), name = clean)
-        db.groups().insert(group)
-        return group
-    }
-
-    /** Eliminare un gruppo NON elimina i conti: restano senza gruppo (SPEC F-10). */
-    suspend fun deleteGroup(id: String) {
-        db.accounts().clearGroup(id)
-        db.groups().delete(id)
+    suspend fun reorderAccounts(orderedIds: List<String>) {
+        val accounts = db.accounts().getAll().associateBy { it.id }
+        val updated = orderedIds.mapIndexedNotNull { index, id ->
+            accounts[id]?.let { it.copy(sortOrder = index) }
+        }
+        updated.forEach { db.accounts().delete(it.id); db.accounts().insert(it) }
     }
 
     suspend fun allAccounts(): List<Account> = db.accounts().getAll()
-    suspend fun allGroups(): List<Group> = db.groups().getAll()
 
-    suspend fun replaceAll(accounts: List<Account>, groups: List<Group>) {
-        db.groups().replaceAll(groups)
+    suspend fun replaceAll(accounts: List<Account>) {
         db.accounts().replaceAll(accounts)
     }
 
     suspend fun resetAll() {
         db.accounts().deleteAll()
-        db.groups().deleteAll()
     }
 
     private fun cleanText(value: String, max: Int): String =
@@ -111,28 +101,25 @@ class Repository(private val db: AppDatabase) {
 
 /** Ricerca, filtri e ordinamento, come in src/core/model.js della PWA. */
 object AccountFilter {
-    data class Filter(val query: String = "", val favoritesOnly: Boolean = false, val groupId: String? = null)
+    data class Filter(val query: String = "", val favoritesOnly: Boolean = false)
 
     fun apply(accounts: List<Account>, filter: Filter): List<Account> {
         val q = filter.query.trim().lowercase()
         return accounts
             .asSequence()
             .filter { !filter.favoritesOnly || it.isFavorite }
-            .filter { filter.groupId == null || it.groupId == filter.groupId }
             .filter { a ->
                 q.isEmpty() || listOf(a.alias, a.titolare, a.banca, a.note, a.iban)
                     .any { it.lowercase().contains(q) }
             }
             .sortedWith(
                 compareByDescending<Account> { it.isFavorite }
+                    .thenBy { it.sortOrder }
                     .thenBy(String.CASE_INSENSITIVE_ORDER) { it.displayName }
                     .thenBy { it.iban },
             )
             .toList()
     }
-
-    fun countByGroup(accounts: List<Account>): Map<String?, Int> =
-        accounts.groupingBy { it.groupId }.eachCount()
 }
 
 fun Flow<List<Account>>.visible(filter: AccountFilter.Filter): Flow<List<Account>> =

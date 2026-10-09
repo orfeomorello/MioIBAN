@@ -30,8 +30,7 @@ interface AccountDao {
     @Query("DELETE FROM accounts WHERE id = :id")
     suspend fun delete(id: String)
 
-    @Query("UPDATE accounts SET groupId = NULL WHERE groupId = :groupId")
-    suspend fun clearGroup(groupId: String)
+
 
     @Query("DELETE FROM accounts")
     suspend fun deleteAll()
@@ -43,26 +42,4 @@ interface AccountDao {
     }
 }
 
-@Dao
-interface GroupDao {
-    @Query("SELECT * FROM account_groups ORDER BY name COLLATE NOCASE")
-    fun observeAll(): Flow<List<Group>>
 
-    @Query("SELECT * FROM account_groups ORDER BY name COLLATE NOCASE")
-    suspend fun getAll(): List<Group>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(group: Group)
-
-    @Query("DELETE FROM account_groups WHERE id = :id")
-    suspend fun delete(id: String)
-
-    @Query("DELETE FROM account_groups")
-    suspend fun deleteAll()
-
-    @Transaction
-    suspend fun replaceAll(groups: List<Group>) {
-        deleteAll()
-        groups.forEach { insert(it) }
-    }
-}

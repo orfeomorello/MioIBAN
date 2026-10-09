@@ -8,7 +8,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,9 +54,9 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
     val app = context.applicationContext as MioIbanApp
     val listState by vm.list.collectAsState()
 
+    var language by remember { mutableStateOf(app.prefs.language) }
     var theme by remember { mutableStateOf(app.prefs.theme) }
     var size by remember { mutableStateOf(app.prefs.fontSize) }
-    var newGroup by remember { mutableStateOf("") }
     var pendingImport by remember { mutableStateOf<Backup.ParseResult.Ok?>(null) }
     var pendingImportCount by remember { mutableStateOf(0) }
     var confirmReset by remember { mutableStateOf(false) }
@@ -123,6 +121,21 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            SectionTitle(stringResource(R.string.settings_language))
+            ChoiceRow(
+                options = listOf(
+                    "system" to stringResource(R.string.settings_lang_system),
+                    "it" to "Italiano",
+                    "en" to "English",
+                ),
+                selected = language,
+                onSelect = {
+                    language = it
+                    app.prefs.language = it
+                    MioIbanApp.applyLanguage(it)
+                },
+            )
+
             SectionTitle(stringResource(R.string.settings_appearance))
             ChoiceRow(
                 options = listOf(
@@ -152,34 +165,6 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
                     (context as? Activity)?.recreate()
                 },
             )
-
-            SectionTitle(stringResource(R.string.settings_groups))
-            Text(stringResource(R.string.settings_groups_hint), style = MaterialTheme.typography.bodySmall)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = newGroup,
-                    onValueChange = { newGroup = it.take(40) },
-                    placeholder = { Text(stringResource(R.string.settings_group_placeholder)) },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
-                )
-                Button(onClick = {
-                    vm.addGroup(newGroup)
-                    newGroup = ""
-                }) { Text(stringResource(R.string.settings_group_add)) }
-            }
-            val groups = vm.list.collectAsState().value.groups
-            if (groups.isEmpty()) {
-                Text(stringResource(R.string.settings_group_empty), style = MaterialTheme.typography.bodySmall)
-            }
-            groups.forEach { g ->
-                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                    Text(g.name, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { vm.deleteGroup(g.id) }) {
-                        Text(stringResource(R.string.action_delete))
-                    }
-                }
-            }
 
             SectionTitle(stringResource(R.string.settings_backup))
             Text(stringResource(R.string.settings_backup_hint), style = MaterialTheme.typography.bodySmall)

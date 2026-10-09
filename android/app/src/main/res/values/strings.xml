@@ -17,6 +17,7 @@
     <string name="action_close">Chiudi</string>
     <string name="action_share">Condividi</string>
     <string name="action_print">Stampa</string>
+    <string name="action_pdf">PDF</string>
     <string name="action_print_all">Stampa tutti</string>
     <string name="action_clear">Cancella</string>
     <string name="action_read">Leggi</string>
@@ -76,6 +77,7 @@
     <string name="form_bank">Banca</string>
     <string name="form_bic">BIC (opzionale)</string>
     <string name="form_note">Note</string>
+    <string name="form_causale">Causale</string>
     <string name="form_group">Gruppo</string>
     <string name="form_none">Nessuno</string>
     <string name="form_favorite">Preferito</string>
@@ -113,12 +115,8 @@
     <string name="settings_text">Testo</string>
     <string name="settings_language">Lingua</string>
     <string name="settings_lang_system">Sistema</string>
-    <string name="settings_groups">Gruppi</string>
-    <string name="settings_groups_hint">I gruppi servono a filtrare i conti. Sono facoltativi.</string>
-    <string name="settings_group_placeholder">Es. Famiglia</string>
-    <string name="settings_group_add">Aggiungi gruppo</string>
-    <string name="settings_group_empty">Nessun gruppo.</string>
-    <string name="settings_group_delete_body">Eliminare il gruppo «%1$s»? I conti resteranno, ma senza gruppo.</string>
+    <string name="settings_lang_it">Italiano</string>
+    <string name="settings_lang_en">English</string>
     <string name="settings_backup">Backup</string>
     <string name="settings_backup_hint">Il backup è l\'unico modo per non perdere i dati. Nessuno può recuperarli al posto tuo.</string>
     <string name="settings_export">Esporta backup</string>
@@ -153,6 +151,10 @@
     <string name="print_iban">IBAN</string>
     <string name="print_reason">Causale</string>
     <string name="print_footer">Documento generato localmente da MioIBAN il %1$s. Verificare sempre i dati prima dell\'uso.</string>
+    <string name="causale_dialog_title">Inserisci la causale</string>
+    <string name="causale_dialog_hint">La causale verrà stampata sul documento.</string>
+    <string name="causale_label">Causale</string>
+    <string name="causale_use_note">Usa le note come causale</string>
     <string name="share_title">Condividi IBAN</string>
     <string name="share_text">IBAN di %1$s: %2$s</string>
     <string name="share_text_noalias">IBAN: %1$s</string>

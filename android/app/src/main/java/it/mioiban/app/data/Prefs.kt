@@ -18,9 +18,9 @@ class Prefs(context: Context) {
         get() = sp.getString("fontSize", "normal") ?: "normal"
         set(value) = sp.edit().putString("fontSize", value).apply()
 
-    /** Lingua scelta dall'utente: "system", "it" oppure "en". */
+    /** Lingua scelta dall'utente: "it" (predefinita) oppure "en". */
     var language: String
-        get() = sp.getString("lang", "system") ?: "system"
+        get() = sp.getString("lang", "it") ?: "it"
         set(value) = sp.edit().putString("lang", value).apply()
 
     var listView: String

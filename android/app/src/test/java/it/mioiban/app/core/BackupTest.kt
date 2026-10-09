@@ -1,7 +1,6 @@
 package it.mioiban.app.core
 
 import it.mioiban.app.data.Account
-import it.mioiban.app.data.Group
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -14,17 +13,15 @@ class BackupTest {
         titolare = "Mario Rossi",
         banca = "Banca Esempio",
         alias = "Affitto",
-        groupId = "g1",
         isFavorite = true,
         createdAt = 1L,
         lastUsedAt = 2L,
     )
 
     @Test
-    fun roundTripKeepsAccountsAndGroups() {
+    fun roundTripKeepsAccountsAndPreferences() {
         val json = Backup.write(
             accounts = listOf(account),
-            groups = listOf(Group("g1", "Casa")),
             preferences = mapOf("tema" to "dark"),
             appVersion = "1.0.0",
             exportedAt = 10L,
@@ -33,8 +30,7 @@ class BackupTest {
         assertTrue(result is Backup.ParseResult.Ok)
         val ok = result as Backup.ParseResult.Ok
         assertEquals(account.iban, ok.accounts.single().iban)
-        assertEquals("g1", ok.accounts.single().groupId)
-        assertEquals("Casa", ok.groups.single().name)
+        assertEquals("Affitto", ok.accounts.single().alias)
         assertEquals("dark", ok.preferences["tema"])
     }
 
@@ -70,7 +66,8 @@ class BackupTest {
 
     @Test
     fun pwaExportWithoutAppKeyIsAccepted() {
-        // Forma reale dell'export PWA (src/core/storage.js exportState): niente `app`, usa `exportDate`.
+        // Forma reale dell'export PWA (src/core/storage.js exportState): niente `app`,
+        // usa `exportDate`; i campi di gruppo della PWA vengono ignorati.
         val json = """{
             "schemaVersion": 2,
             "exportDate": "2025-01-10T09:30:00.000Z",
@@ -87,7 +84,6 @@ class BackupTest {
         val ok = Backup.read(json) as Backup.ParseResult.Ok
         assertEquals("Affitto", ok.accounts.single().alias)
         assertEquals("IT60X0542811101000000123456", ok.accounts.single().iban)
-        assertEquals("Casa", ok.groups.single().name)
         assertEquals("dark", ok.preferences["tema"])
         assertEquals(0, ok.skipped)
     }
@@ -104,7 +100,7 @@ class BackupTest {
 
     @Test
     fun exportIncludesExportDate() {
-        val json = Backup.write(emptyList(), emptyList(), emptyMap(), "1.0.0", 0L)
+        val json = Backup.write(emptyList(), emptyMap(), "1.0.0", 0L)
         assertTrue(json.contains("\"exportDate\""))
     }
 

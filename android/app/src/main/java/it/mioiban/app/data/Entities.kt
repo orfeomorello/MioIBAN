@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "accounts",
-    indices = [Index(value = ["iban"], unique = true), Index(value = ["groupId"])],
+    indices = [Index(value = ["iban"], unique = true)],
 )
 data class Account(
     @PrimaryKey val id: String,
@@ -21,8 +21,9 @@ data class Account(
     val bic: String = "",
     val alias: String = "",
     val note: String = "",
-    val groupId: String? = null,
+    val causale: String = "",
     val isFavorite: Boolean = false,
+    val sortOrder: Int = 0,
     val createdAt: Long,
     val lastUsedAt: Long,
 ) {
@@ -30,10 +31,3 @@ data class Account(
     val displayName: String
         get() = listOf(alias, titolare, banca).firstOrNull { it.isNotBlank() } ?: iban
 }
-
-/** Gruppo per filtrare i conti (facoltativo). */
-@Entity(tableName = "account_groups")
-data class Group(
-    @PrimaryKey val id: String,
-    val name: String,
-)

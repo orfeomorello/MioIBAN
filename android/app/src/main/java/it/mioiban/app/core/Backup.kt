@@ -1,7 +1,6 @@
 package it.mioiban.app.core
 
 import it.mioiban.app.data.Account
-import it.mioiban.app.data.Group
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
@@ -25,7 +24,6 @@ object Backup {
     sealed interface ParseResult {
         data class Ok(
             val accounts: List<Account>,
-            val groups: List<Group>,
             val preferences: Map<String, Any?>,
             /** Conti del file che non sono stati importati (IBAN non valido o duplicato). */
             val skipped: Int,
@@ -36,7 +34,6 @@ object Backup {
 
     fun write(
         accounts: List<Account>,
-        groups: List<Group>,
         preferences: Map<String, Any>,
         appVersion: String,
         exportedAt: Long,
@@ -58,17 +55,14 @@ object Backup {
                     .put("bic", a.bic)
                     .put("alias", a.alias)
                     .put("note", a.note)
-                    .put("groupId", a.groupId ?: JSONObject.NULL)
+                    .put("causale", a.causale)
                     .put("isFavorite", a.isFavorite)
+                    .put("sortOrder", a.sortOrder)
                     .put("createdAt", a.createdAt)
                     .put("lastUsedAt", a.lastUsedAt),
             )
         }
         root.put("accounts", accountsJson)
-
-        val groupsJson = JSONArray()
-        for (g in groups) groupsJson.put(JSONObject().put("id", g.id).put("name", g.name))
-        root.put("groups", groupsJson)
 
         val prefs = JSONObject()
         for ((k, v) in preferences) prefs.put(k, v)
@@ -98,16 +92,6 @@ object Backup {
         if (version > SCHEMA_VERSION) return ParseResult.Error("backup_newer")
 
         val accountsJson = root.optJSONArray("accounts") ?: return ParseResult.Error("backup_invalid")
-        val groupsJson = root.optJSONArray("groups") ?: JSONArray()
-
-        val groups = mutableListOf<Group>()
-        for (i in 0 until groupsJson.length()) {
-            val g = groupsJson.optJSONObject(i) ?: continue
-            val id = g.optString("id")
-            if (id.isBlank()) continue
-            groups += Group(id = id, name = g.optString("name").ifBlank { "Gruppo" })
-        }
-        val groupIds = groups.map { it.id }.toSet()
 
         val now = System.currentTimeMillis()
         val accounts = mutableListOf<Account>()
@@ -124,7 +108,6 @@ object Backup {
                 skipped += 1
                 continue
             }
-            val groupId = a.optString("groupId").takeIf { it.isNotBlank() && it in groupIds }
             accounts += Account(
                 id = a.optString("id").ifBlank { UUID.randomUUID().toString() },
                 iban = check.electronic,
@@ -133,8 +116,9 @@ object Backup {
                 bic = a.optString("bic").uppercase(),
                 alias = a.optString("alias"),
                 note = a.optString("note"),
-                groupId = groupId,
+                causale = a.optString("causale"),
                 isFavorite = a.optBoolean("isFavorite", false),
+                sortOrder = a.optInt("sortOrder", 0),
                 createdAt = a.optLong("createdAt", now),
                 lastUsedAt = a.optLong("lastUsedAt", now),
             )
@@ -148,6 +132,6 @@ object Backup {
             }
         }
 
-        return ParseResult.Ok(accounts, groups, prefs, skipped)
+        return ParseResult.Ok(accounts, prefs, skipped)
     }
 }

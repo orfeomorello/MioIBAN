@@ -48,9 +48,14 @@ La libreria è già inclusa in `vendor/`: non serve installare nulla.
 ## App Android
 
 Accanto alla PWA c'è una app Android nativa, in `android/`, scritta in Kotlin
-con Jetpack Compose e Material 3. Ha le stesse funzioni e lo stesso formato di
+con Jetpack Compose e Material 3. Ha le stesse funzioni di base e lo stesso formato di
 backup (`schemaVersion: 2`), quindi un file esportato da una può essere
 importato nell'altra.
+
+Piccole divergenze deliberate rispetto alla PWA (gruppi rimossi, stampa e PDF come
+azioni separate con scelta della causale, riordinamento manuale delle schede a
+trascinamento, scelta della lingua anche nelle impostazioni): sono elencate in
+`android/FUNZIONALITA.md` (§7).
 
 Non ha permessi di rete e non contiene analytics: come la PWA, tutto resta sul dispositivo.
 
@@ -112,7 +117,7 @@ android/
     core/        Validazione IBAN, CIN, estrazione dal testo, backup (puro Kotlin)
     data/        Room (SQLite), preferenze, repository
     ui/          Schermate Compose, navigazione, tema Material 3
-    ui/print/    Stampa e PDF
+    ui/print/    Generazione PDF e foglio A4 (stampa e salvataggio)
   app/src/test/  Test unitari (IbanTest, BackupTest)
 ```
 

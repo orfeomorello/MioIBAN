@@ -55,8 +55,8 @@ fun AccountFormScreen(
     var bic by remember { mutableStateOf("") }
     var alias by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
+    var causale by remember { mutableStateOf("") }
     var favorite by remember { mutableStateOf(false) }
-    var groupId by remember { mutableStateOf<String?>(null) }
     var duplicateOf by remember { mutableStateOf<String?>(null) }
     var pasteText by remember { mutableStateOf("") }
     var pasteCandidates by remember { mutableStateOf(emptyList<Extract.Candidate>()) }
@@ -73,8 +73,8 @@ fun AccountFormScreen(
                 bic = a.bic
                 alias = a.alias
                 note = a.note
+                causale = a.causale
                 favorite = a.isFavorite
-                groupId = a.groupId
             }
             loaded = true
         }
@@ -224,6 +224,13 @@ fun AccountFormScreen(
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
             )
+            OutlinedTextField(
+                value = causale,
+                onValueChange = { causale = it.take(200) },
+                label = { Text(stringResource(R.string.form_causale)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             duplicateOf?.let { dupId ->
                 Text(stringResource(R.string.form_duplicate_noalias), style = MaterialTheme.typography.bodyMedium)
@@ -245,7 +252,7 @@ fun AccountFormScreen(
                         bic = bic,
                         alias = alias,
                         note = note,
-                        groupId = groupId,
+                        causale = causale,
                         isFavorite = favorite,
                     )
                     vm.save(draft, editingId) { result ->

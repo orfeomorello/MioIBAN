@@ -1,6 +1,7 @@
 package it.mioiban.app.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
@@ -31,8 +33,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -97,16 +103,58 @@ fun AccountListScreen(
             } else if (state.accounts.isEmpty()) {
                 EmptyState(title = stringResource(R.string.list_no_results), hint = null)
             } else {
+                val listState = rememberLazyListState()
+                var draggedItemIndex by remember { mutableStateOf<Int?>(null) }
+                var currentOverIndex by remember { mutableStateOf<Int?>(null) }
+
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(state.accounts, key = { it.id }) { account ->
+                    itemsIndexed(state.accounts, key = { _, item -> item.id }) { index, account ->
                         AccountCard(
                             account = account,
                             onOpen = { onOpen(account.id) },
                             onToggleFavorite = { vm.toggleFavorite(account) },
+                            modifier = Modifier.pointerInput(Unit) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = { draggedItemIndex = index },
+                                    onDragEnd = {
+                                        draggedItemIndex?.let { from ->
+                                            currentOverIndex?.let { to ->
+                                                if (from != to) {
+                                                    val mutableList = state.accounts.toMutableList()
+                                                    val item = mutableList.removeAt(from)
+                                                    mutableList.add(to, item)
+                                                    vm.reorderAccounts(mutableList.map { it.id })
+                                                }
+                                            }
+                                        }
+                                        draggedItemIndex = null
+                                        currentOverIndex = null
+                                    },
+                                    onDragCancel = {
+                                        draggedItemIndex = null
+                                        currentOverIndex = null
+                                    },
+                                    onDrag = { change, _ ->
+                                        change.consume()
+                                        val layoutInfo = listState.layoutInfo
+                                        val draggedItem = layoutInfo.visibleItemsInfo.find { it.index == draggedItemIndex }
+                                        if (draggedItem != null) {
+                                            val draggedCenter = draggedItem.offset + draggedItem.size / 2
+                                            val overItem = layoutInfo.visibleItemsInfo.find { itemInfo ->
+                                                if (itemInfo.index == draggedItemIndex) return@find false
+                                                val itemCenter = itemInfo.offset + itemInfo.size / 2
+                                                draggedCenter in (itemCenter - itemInfo.size / 2)..(itemCenter + itemInfo.size / 2)
+                                            }
+                                            currentOverIndex = overItem?.index
+                                        }
+                                    },
+                                )
+                            },
                         )
                     }
                 }
@@ -116,9 +164,9 @@ fun AccountListScreen(
 }
 
 @Composable
-private fun AccountCard(account: Account, onOpen: () -> Unit, onToggleFavorite: () -> Unit) {
+private fun AccountCard(account: Account, onOpen: () -> Unit, onToggleFavorite: () -> Unit, modifier: Modifier = Modifier) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onOpen),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

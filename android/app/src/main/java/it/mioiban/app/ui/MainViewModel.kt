@@ -7,7 +7,6 @@ import it.mioiban.app.MioIbanApp
 import it.mioiban.app.data.Account
 import it.mioiban.app.data.AccountDraft
 import it.mioiban.app.data.AccountFilter
-import it.mioiban.app.data.Group
 import it.mioiban.app.data.Prefs
 import it.mioiban.app.data.Repository
 import it.mioiban.app.data.SaveResult
@@ -19,10 +18,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** Stato dell'elenco: conti visibili, gruppi e filtri correnti. */
+/** Stato dell'elenco: conti visibili e filtri correnti. */
 data class ListState(
     val accounts: List<Account> = emptyList(),
-    val groups: List<Group> = emptyList(),
     val filter: AccountFilter.Filter = AccountFilter.Filter(),
     val totalCount: Int = 0,
 )
@@ -38,10 +36,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val filter = MutableStateFlow(AccountFilter.Filter())
 
-    val list: StateFlow<ListState> = combine(repository.accounts, repository.groups, filter) { accounts, groups, f ->
+    val list: StateFlow<ListState> = combine(repository.accounts, filter) { accounts, f ->
         ListState(
             accounts = AccountFilter.apply(accounts, f),
-            groups = groups,
             filter = f,
             totalCount = accounts.size,
         )
@@ -49,7 +46,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setQuery(query: String) = filter.value.let { filter.value = it.copy(query = query) }
     fun setFavoritesOnly(on: Boolean) = filter.value.let { filter.value = it.copy(favoritesOnly = on) }
-    fun setGroup(groupId: String?) = filter.value.let { filter.value = it.copy(groupId = groupId) }
     fun clearFilters() {
         filter.value = AccountFilter.Filter()
     }
@@ -67,6 +63,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { repository.setFavorite(account, !account.isFavorite) }
     }
 
+    fun reorderAccounts(orderedIds: List<String>) {
+        viewModelScope.launch { repository.reorderAccounts(orderedIds) }
+    }
+
     fun delete(id: String, onDone: () -> Unit) {
         viewModelScope.launch {
             repository.delete(id)
@@ -74,22 +74,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun addGroup(name: String) {
-        viewModelScope.launch { repository.addGroup(name) }
-    }
-
-    fun deleteGroup(id: String) {
-        viewModelScope.launch { repository.deleteGroup(id) }
-    }
-
     /** Esporta il JSON completo del backup. */
     fun exportBackupJson(appVersion: String, onReady: (String, Int) -> Unit) {
         viewModelScope.launch {
             val accounts = repository.allAccounts()
-            val groups = repository.allGroups()
             val json = Backup.write(
                 accounts = accounts,
-                groups = groups,
                 preferences = prefs.toMap(),
                 appVersion = appVersion,
                 exportedAt = System.currentTimeMillis(),
@@ -104,7 +94,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /** Applica un backup già confermato dall'utente: sostituzione atomica. */
     fun applyBackup(result: Backup.ParseResult.Ok, onDone: () -> Unit) {
         viewModelScope.launch {
-            repository.replaceAll(result.accounts, result.groups)
+            repository.replaceAll(result.accounts)
             prefs.restore(result.preferences)
             onDone()
         }

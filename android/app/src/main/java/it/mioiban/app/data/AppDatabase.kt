@@ -5,10 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Account::class, Group::class], version = 1, exportSchema = false)
+// Versione 4: lo schema è cambiato rispetto alla versione 3 installata in precedenza
+// (rimossi i gruppi). Senza un aumento di versione Room rifiuta di aprire il vecchio file.
+@Database(entities = [Account::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun accounts(): AccountDao
-    abstract fun groups(): GroupDao
 
     companion object {
         @Volatile
@@ -20,7 +21,11 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "mioiban.db",
-                ).build().also { instance = it }
+                )
+                    // Il database precedente (con i gruppi) viene sostituito: l'app non ha
+                    // migrazioni da fare, perché i dati si ripristinano dal backup.
+                    .fallbackToDestructiveMigration()
+                    .build().also { instance = it }
             }
     }
 }
