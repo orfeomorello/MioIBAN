@@ -12,6 +12,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun accounts(): AccountDao
 
     companion object {
+        /** Deve corrispondere al `version` dell'annotazione [Database]. */
+        const val VERSION = 4
+
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -22,8 +25,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mioiban.db",
                 )
-                    // Il database precedente (con i gruppi) viene sostituito: l'app non ha
-                    // migrazioni da fare, perché i dati si ripristinano dal backup.
+                    // Il database precedente (con i gruppi) viene sostituito: l'app
+                    // recupera prima i conti con LegacyImport, così non si perde niente.
                     .fallbackToDestructiveMigration()
                     .build().also { instance = it }
             }

@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +47,9 @@ import it.mioiban.app.ui.components.SectionTitle
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +57,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as MioIbanApp
     val listState by vm.list.collectAsState()
+    val scope = rememberCoroutineScope()
 
     var language by remember { mutableStateOf(app.prefs.language) }
     var theme by remember { mutableStateOf(app.prefs.theme) }
@@ -78,25 +83,30 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
         ActivityResultContracts.OpenDocument(),
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
-        val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-        if (text == null) {
-            importError = context.getString(R.string.backup_invalid)
-            return@rememberLauncherForActivityResult
-        }
-        vm.inspectBackup(text) { result ->
-            when (result) {
-                is Backup.ParseResult.Ok -> {
-                    importError = null
-                    pendingImport = result
-                    pendingImportCount = listState.totalCount
+        // Lettura e parse fuori dal thread principale: un backup può essere grande.
+        scope.launch {
+            val text = withContext(Dispatchers.IO) {
+                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            }
+            if (text == null) {
+                importError = context.getString(R.string.backup_invalid)
+                return@launch
+            }
+            vm.inspectBackup(text) { result ->
+                when (result) {
+                    is Backup.ParseResult.Ok -> {
+                        importError = null
+                        pendingImport = result
+                        pendingImportCount = listState.totalCount
+                    }
+                    is Backup.ParseResult.Error -> importError = context.getString(
+                        when (result.reason) {
+                            "backup_newer" -> R.string.backup_newer
+                            "backup_incomplete" -> R.string.backup_incomplete
+                            else -> R.string.backup_invalid
+                        },
+                    )
                 }
-                is Backup.ParseResult.Error -> importError = context.getString(
-                    when (result.reason) {
-                        "backup_newer" -> R.string.backup_newer
-                        "backup_incomplete" -> R.string.backup_incomplete
-                        else -> R.string.backup_invalid
-                    },
-                )
             }
         }
     }
@@ -107,7 +117,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
                 title = { Text(stringResource(R.string.action_settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -125,8 +135,8 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
             ChoiceRow(
                 options = listOf(
                     "system" to stringResource(R.string.settings_lang_system),
-                    "it" to "Italiano",
-                    "en" to "English",
+                    "it" to stringResource(R.string.settings_lang_it),
+                    "en" to stringResource(R.string.settings_lang_en),
                 ),
                 selected = language,
                 onSelect = {
@@ -170,7 +180,11 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
             Text(stringResource(R.string.settings_backup_hint), style = MaterialTheme.typography.bodySmall)
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { exportLauncher.launch("mioiban-backup.json") },
+                onClick = {
+                    // Nome con data: due backup esportati lo stesso giorno non si confondono.
+                    val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.getDefault()).format(Date())
+                    exportLauncher.launch("mioiban-backup-$stamp.json")
+                },
             ) { Text(stringResource(R.string.settings_export)) }
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),

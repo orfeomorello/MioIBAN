@@ -11,12 +11,14 @@ import it.mioiban.app.data.Prefs
 import it.mioiban.app.data.Repository
 import it.mioiban.app.data.SaveResult
 import it.mioiban.app.core.Backup
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Stato dell'elenco: conti visibili e filtri correnti. */
 data class ListState(
@@ -67,6 +69,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { repository.reorderAccounts(orderedIds) }
     }
 
+    /** Sposta un conto di una posizione su o giù (alternativa al trascinamento). */
+    fun moveAccount(id: String, up: Boolean) {
+        viewModelScope.launch { repository.moveAccount(id, up) }
+    }
+
     fun delete(id: String, onDone: () -> Unit) {
         viewModelScope.launch {
             repository.delete(id)
@@ -88,8 +95,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Legge un backup e, solo se valido, prepara il riepilogo per la conferma. */
-    fun inspectBackup(json: String, onResult: (Backup.ParseResult) -> Unit) = onResult(Backup.read(json))
+    /**
+     * Legge un backup e, solo se valido, prepara il riepilogo per la conferma.
+     * Il parse gira fuori dal thread principale: un backup è un file, e i file
+     * grandi non si leggono sulla UI.
+     */
+    fun inspectBackup(json: String, onResult: (Backup.ParseResult) -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.Default) { Backup.read(json) }
+            onResult(result)
+        }
+    }
 
     /** Applica un backup già confermato dall'utente: sostituzione atomica. */
     fun applyBackup(result: Backup.ParseResult.Ok, onDone: () -> Unit) {

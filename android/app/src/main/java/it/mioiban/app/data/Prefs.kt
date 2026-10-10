@@ -31,6 +31,15 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("onboardingCompleted", false)
         set(value) = sp.edit().putBoolean("onboardingCompleted", value).apply()
 
+    /**
+     * Versione dello schema del database già sistemata dall'app. Serve a sapere
+     * se, al prossimo avvio, Room sostituirà il database con uno schema nuovo:
+     * in quel caso prima recuperiamo i conti (vedi `LegacyImport`).
+     */
+    var dbVersion: Int
+        get() = sp.getInt("dbVersion", 0)
+        set(value) = sp.edit().putInt("dbVersion", value).apply()
+
     /** Esporta le preferenze nel formato del backup (stesse chiavi della PWA). */
     fun toMap(): Map<String, Any> = mapOf(
         "tema" to theme,

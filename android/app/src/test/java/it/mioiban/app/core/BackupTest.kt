@@ -35,6 +35,33 @@ class BackupTest {
     }
 
     @Test
+    fun roundTripKeepsManualOrder() {
+        // Ordine manuale impostato col trascinamento: il backup lo deve conservare.
+        val first = account.copy(id = "a1", alias = "Zeta", sortOrder = 2)
+        val second = account.copy(id = "a2", iban = "GB82WEST12345698765432", alias = "Alfa", sortOrder = 1)
+        val json = Backup.write(
+            accounts = listOf(first, second),
+            preferences = emptyMap(),
+            appVersion = "1.0.1",
+            exportedAt = 10L,
+        )
+        val ok = Backup.read(json) as Backup.ParseResult.Ok
+        // L'ordine di scrittura è quello di visualizzazione (Repository.allAccounts).
+        assertEquals(listOf("Zeta", "Alfa"), ok.accounts.map { it.alias })
+        assertEquals(2, ok.accounts[0].sortOrder)
+        assertEquals(1, ok.accounts[1].sortOrder)
+    }
+
+    @Test
+    fun missingSortOrderDefaultsToZero() {
+        // I backup della PWA non hanno sortOrder: devono importarsi senza errori.
+        val json = """{"app":"MioIBAN","schemaVersion":2,"accounts":[
+            {"id":"x","iban":"IT60X0542811101000000123456"}]}"""
+        val ok = Backup.read(json) as Backup.ParseResult.Ok
+        assertEquals(0, ok.accounts.single().sortOrder)
+    }
+
+    @Test
     fun newerSchemaIsRejected() {
         val json = """{"app":"MioIBAN","schemaVersion":99,"accounts":[]}"""
         assertEquals(Backup.ParseResult.Error("backup_newer"), Backup.read(json))

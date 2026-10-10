@@ -17,7 +17,6 @@
     <string name="action_share">Share</string>
     <string name="action_print">Print</string>
     <string name="action_pdf">PDF</string>
-    <string name="action_print_all">Print all</string>
     <string name="action_clear">Clear</string>
     <string name="action_read">Read</string>
     <string name="action_stop">Stop</string>
@@ -46,16 +45,17 @@
     <string name="list_title">Your accounts</string>
     <string name="list_search_hint">Search by name, bank or IBAN</string>
     <string name="list_favorites">Favorites</string>
-    <string name="list_all_groups">All groups</string>
-    <string name="list_view_cards">Cards</string>
-    <string name="list_view_rows">Rows</string>
     <string name="list_empty_title">You have not saved any account yet.</string>
     <string name="list_empty_hint">Tap «Plus» at the bottom to save one.</string>
     <string name="list_no_results">No accounts found.</string>
+    <string name="list_reorder_hint">Tap a card to open it. Long-press and drag to reorder: the order you choose is kept in the backup too.</string>
 
     <string name="detail_holder">Account holder</string>
     <string name="detail_bic">BIC</string>
     <string name="detail_note">Notes</string>
+    <string name="detail_order">Position in the list</string>
+    <string name="detail_move_up">Move up</string>
+    <string name="detail_move_down">Move down</string>
     <string name="detail_copy_compact">Copy IBAN</string>
     <string name="detail_copied_toast">IBAN copied to the clipboard.</string>
     <string name="detail_delete_title">Delete this account?</string>
@@ -72,8 +72,6 @@
     <string name="form_bic">BIC (optional)</string>
     <string name="form_note">Notes</string>
     <string name="form_causale">Reason</string>
-    <string name="form_group">Group</string>
-    <string name="form_none">None</string>
     <string name="form_favorite">Favorite</string>
     <string name="form_iban_placeholder">GB82 WEST 1234 5698 7654 32</string>
     <string name="form_paste_title">Paste a message</string>
@@ -101,7 +99,6 @@
     <string name="sportello_read_blocks">Listen to the IBAN</string>
     <string name="sportello_voice_unavailable">Read-aloud is not available on this device.</string>
     <string name="tts_zero">zero</string>
-    <string name="a11y_open_account">Open the account %1$s</string>
 
     <string name="settings_appearance">Appearance</string>
     <string name="settings_text">Text</string>
@@ -127,12 +124,12 @@
     <string name="settings_about">About</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_privacy_hint">MioIBAN uses no servers and no accounts: your IBANs stay only on this device.</string>
-    <string name="settings_disclaimer_btn">Personal data and privacy</string>
 
     <string name="backup_invalid">This file is not a valid MioIBAN backup.</string>
     <string name="backup_newer">This backup was created by a newer version of MioIBAN.</string>
     <string name="backup_incomplete">The backup is incomplete or contains invalid IBANs.</string>
-    <string name="backup_empty">The backup contains no accounts.</string>
+
+    <string name="legacy_recovered">Update: %1$d accounts recovered from the previous version.</string>
 
     <string name="print_title">PAYMENT DETAILS</string>
     <string name="print_holder">Account holder</string>

@@ -18,7 +18,6 @@
     <string name="action_share">Condividi</string>
     <string name="action_print">Stampa</string>
     <string name="action_pdf">PDF</string>
-    <string name="action_print_all">Stampa tutti</string>
     <string name="action_clear">Cancella</string>
     <string name="action_read">Leggi</string>
     <string name="action_stop">Ferma</string>
@@ -50,17 +49,18 @@
     <string name="list_title">I tuoi conti</string>
     <string name="list_search_hint">Cerca per nome, banca o IBAN</string>
     <string name="list_favorites">Preferiti</string>
-    <string name="list_all_groups">Tutti i gruppi</string>
-    <string name="list_view_cards">Schede</string>
-    <string name="list_view_rows">Righe</string>
     <string name="list_empty_title">Non hai ancora salvato nessun conto.</string>
     <string name="list_empty_hint">Tocca «Più» in basso per salvarne uno.</string>
     <string name="list_no_results">Nessun conto trovato.</string>
+    <string name="list_reorder_hint">Tocca una scheda per aprirla; tieni premuto e trascina per ordinare le schede: l\'ordine scelto si ritrova anche nel backup.</string>
 
     <!-- Dettaglio -->
     <string name="detail_holder">Intestatario</string>
     <string name="detail_bic">BIC</string>
     <string name="detail_note">Note</string>
+    <string name="detail_order">Posizione nell\'elenco</string>
+    <string name="detail_move_up">Sposta su</string>
+    <string name="detail_move_down">Sposta giù</string>
     <string name="detail_copy_compact">Copia IBAN</string>
     <string name="detail_copied_toast">IBAN copiato negli appunti.</string>
     <string name="detail_delete_title">Eliminare questo conto?</string>
@@ -78,8 +78,6 @@
     <string name="form_bic">BIC (opzionale)</string>
     <string name="form_note">Note</string>
     <string name="form_causale">Causale</string>
-    <string name="form_group">Gruppo</string>
-    <string name="form_none">Nessuno</string>
     <string name="form_favorite">Preferito</string>
     <string name="form_iban_placeholder">IT60 X054 2811 1010 0000 0123 456</string>
     <string name="form_paste_title">Incolla un messaggio</string>
@@ -108,7 +106,6 @@
     <string name="sportello_read_blocks">Ascolta l\'IBAN</string>
     <string name="sportello_voice_unavailable">La lettura ad alta voce non è disponibile su questo dispositivo.</string>
     <string name="tts_zero">zero</string>
-    <string name="a11y_open_account">Apri il conto %1$s</string>
 
     <!-- Impostazioni -->
     <string name="settings_appearance">Aspetto</string>
@@ -135,13 +132,14 @@
     <string name="settings_about">Informazioni</string>
     <string name="settings_version">Versione %1$s</string>
     <string name="settings_privacy_hint">MioIBAN non usa server né account: i tuoi IBAN restano solo su questo dispositivo.</string>
-    <string name="settings_disclaimer_btn">Dati personali e privacy</string>
 
     <!-- Backup -->
     <string name="backup_invalid">Questo file non è un backup di MioIBAN valido.</string>
     <string name="backup_newer">Questo backup è stato creato da una versione più recente di MioIBAN.</string>
     <string name="backup_incomplete">Il backup è incompleto o contiene IBAN non validi.</string>
-    <string name="backup_empty">Il backup non contiene nessun conto.</string>
+
+    <!-- Aggiornamento -->
+    <string name="legacy_recovered">Aggiornamento: %1$d conti recuperati dalla versione precedente.</string>
 
     <!-- Stampa e condivisione -->
     <string name="print_title">DATI PER BONIFICO</string>

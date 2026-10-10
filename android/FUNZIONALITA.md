@@ -24,7 +24,7 @@ Obiettivo primario: far copiare a mano un IBAN **senza errori** (anche a persone
 | F-08 | Stampa | Foglio A4 bianco e nero per singolo conto; "Salva come PDF" del sistema | `src/ui/print.js`, `src/styles/print.css` |
 | F-09 | Condivisione | Condivide testo con alias + IBAN formattato (Web Share API) | `src/app.js` (`onShareAccount`), `src/ui/actions.js` |
 | F-10 | Gruppi | **Solo PWA**: creare/eliminare gruppi; eliminare un gruppo NON elimina i conti (li rende "senza gruppo"). Rimossi nell'app Android (vedi §7) | `src/ui/settings.js`, `src/app.js` |
-| F-11 | Preferiti | Stella su scheda/riga; i preferiti salgono in cima all'elenco | `src/ui/list.js`, `src/core/model.js` |
+| F-11 | Preferiti | Stella su scheda/riga; sono solo un filtro: il chip «Preferiti» mostra quelli, ma l'ordine dell'elenco non cambia | `src/ui/list.js`, `src/core/model.js` |
 | F-12 | Vista schede / righe | Due modalità di elenco, ricordata fra le sessioni | `src/ui/list.js`, `src/core/prefs.js` |
 | F-13 | Backup export/import | Export JSON completo (`schemaVersion: 2`); import con controllo versione, riepilogo e **conferma esplicita**; sostituzione atomica | `src/core/backup.js`, `src/core/storage.js` |
 | F-14 | Reimposta app | Cancella conti, gruppi (solo PWA), preferenze, cache; torna all'onboarding | `src/ui/settings.js` |
@@ -89,7 +89,7 @@ L'app Android non è una copia speciale: alcune scelte sono deliberate.
 | D-A1 | **Gruppi rimossi** (F-10, F-05, F-16) | Non erano utilizzabili dalla lista conti (nessun filtro visibile). Rimossi da entità, DB, impostazioni e backup: i backup vecchi importano senza errori, i campi `groupId`/`groups` vengono ignorati. |
 | D-A2 | **Stampa e PDF separati** (F-08) | Due bottoni distinti: "Stampa" e "PDF". Entrambi chiedono prima una causale. |
 | D-A3 | **Causale** | Nuovo campo del conto (max 200 caratteri, anche nel form). Nel dialog di stampa/PDF si può scrivere a mano o spuntare "Usa le note come causale". Nel foglio A4: se la causale è presente viene stampata, altrimenti resta la riga vuota per scriverla a mano. |
-| D-A4 | **Riordinamento manuale** | Lungo tocco + trascina per riordinare le schede dei conti; l'ordine è persistito (`sortOrder`) e ha la priorità sull'ordinamento alfabetico (dopo i preferiti). |
+| D-A4 | **Riordinamento manuale** | Tocco singolo apre il conto, tocco lungo + trascina ordina le schede. Posizione alternativa nel dettaglio («Sposta su/giù»), usabile anche con la lettura dello schermo. L'ordine è persistito (`sortOrder`) e comanda su tutto, preferiti compresi: il chip «Preferiti» è l'unico modo di vederli da soli. L'export del backup conserva l'ordine. |
 | D-A5 | **Selezione lingua anche in impostazioni** | In aggiunta all'onboarding: Sistema / Italiano / English, con riavvio dell'attività come per tema e testo. |
 | D-A6 | **Vista schede/righe (F-12)** | La preferenza `vista` esiste nel backup ma la lista è sempre a schede. |
-| D-A7 | **Database locale versionato** | Room `mioiban.db`, schema v3 (v2: `causale` + `sortOrder`; v3: rimozione `groupId`). |
+| D-A7 | **Database locale versionato** | Room `mioiban.db`, schema v4 (v2: `causale` + `sortOrder`; v3: rimozione `groupId`; v4: schema attuale). Al cambio schema `LegacyImport` recupera i conti dal file vecchio prima che Room lo sostituisca, così un aggiornamento non cancella i dati. |

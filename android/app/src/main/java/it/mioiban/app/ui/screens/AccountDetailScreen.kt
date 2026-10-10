@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -69,10 +71,16 @@ fun AccountDetailScreen(
     onDeleted: () -> Unit,
 ) {
     val context = LocalContext.current
+    val listState by vm.list.collectAsState()
     var account by remember { mutableStateOf<Account?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
     var showCausaleDialog by remember { mutableStateOf(false) }
     var causaleTarget by remember { mutableStateOf("") } // "print" o "pdf"
+
+    // Posizione nell'elenco: per sapere se il conto si può ancora spostare su o giù.
+    val position = listState.accounts.indexOfFirst { it.id == accountId }
+    val canMoveUp = position > 0
+    val canMoveDown = position >= 0 && position < listState.accounts.lastIndex
 
     LaunchedEffect(accountId) {
         account = vm.repository.get(accountId)
@@ -84,7 +92,7 @@ fun AccountDetailScreen(
                 title = { Text(account?.displayName ?: "") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
@@ -169,6 +177,28 @@ fun AccountDetailScreen(
             ) {
                 Icon(Icons.Filled.Share, contentDescription = null)
                 Text("  " + stringResource(R.string.action_share))
+            }
+
+            // L'ordine si sceglie anche qui, oltre che trascinando le schede
+            // nell'elenco: così si può fare anche con la lettura dello schermo.
+            SectionTitle(stringResource(R.string.detail_order))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(
+                    onClick = { vm.moveAccount(acc.id, up = true) },
+                    enabled = canMoveUp,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowUp, contentDescription = null)
+                    Text("  " + stringResource(R.string.detail_move_up))
+                }
+                OutlinedButton(
+                    onClick = { vm.moveAccount(acc.id, up = false) },
+                    enabled = canMoveDown,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null)
+                    Text("  " + stringResource(R.string.detail_move_down))
+                }
             }
 
             if (acc.titolare.isNotBlank() && acc.titolare != acc.displayName) {

@@ -18,9 +18,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -125,7 +125,7 @@ fun SportelloScreen(vm: MainViewModel, accountId: String, onBack: () -> Unit) {
                 title = { Text(stringResource(R.string.sportello_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -162,7 +162,7 @@ fun SportelloScreen(vm: MainViewModel, accountId: String, onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(0.8f).defaultMinSize(minHeight = 56.dp),
             ) {
                 Icon(
-                    if (reading) Icons.Filled.Stop else Icons.Filled.VolumeUp,
+                    if (reading) Icons.Filled.Stop else Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = null,
                 )
                 Text(

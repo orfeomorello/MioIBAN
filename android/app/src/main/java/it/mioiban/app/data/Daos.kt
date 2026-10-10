@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,8 +25,14 @@ interface AccountDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(account: Account)
 
+    @Update
+    suspend fun update(account: Account)
+
     @Query("UPDATE accounts SET lastUsedAt = :time WHERE id = :id")
     suspend fun touch(id: String, time: Long)
+
+    @Query("UPDATE accounts SET sortOrder = :sortOrder WHERE id = :id")
+    suspend fun updateSortOrder(id: String, sortOrder: Int)
 
     @Query("DELETE FROM accounts WHERE id = :id")
     suspend fun delete(id: String)
